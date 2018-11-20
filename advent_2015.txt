@@ -88,7 +88,7 @@ def problem_5(data):
     return out_a, out_b
 
 
-def problem_6_list(data):
+def problem_6(data):
     """problem_6('turn on 0,0 through 999,999') -> 1000000"""
     Op = Enum('Op', 'on off toggle')
     def get_op(line):
