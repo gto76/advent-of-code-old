@@ -2,6 +2,10 @@ from enum import Enum
 from collections import namedtuple
 
 
+# Position Tuple
+P = namedtuple('P', list('xy'))
+
+
 def problem_1(data):
     out_a, out_b = 0, None
     for i, a in enumerate(data, 1):
@@ -30,7 +34,6 @@ def problem_2(data):
 
 def problem_3(data):
     D = Enum('D', {'n': '^', 'e': '>', 's': 'v', 'w': '<'})
-    P = namedtuple('P', list('xy'))
     def move(position, direction):
         MOVE = {D.n: P(-1, 0), D.e: P(0, 1), D.s: P(1, 0), D.w: P(0, -1)}
         return P(*[sum(a) for a in zip(position, MOVE[direction])])
@@ -84,5 +87,35 @@ def problem_5(data):
             out_b += 1
     return out_a, out_b
 
+
+def problem_6_list(data):
+    """problem_6('turn on 0,0 through 999,999') -> 1000000"""
+    Op = Enum('Op', 'on off toggle')
+    def get_op(line):
+        for op in Op:
+            if op.name in line:
+                return op
+    def get_p(a_match):
+        return P(int(a_match.group(1)), int(a_match.group(2)))
+    def turn(grid, nw, se, on):
+        for x in range(nw.x, se.x+1):
+            for y in range(nw.y, se.y+1):
+                grid[x][y] = on
+    def toggle(grid, nw, se):
+        for x in range(nw.x, se.x+1):
+            for y in range(nw.y, se.y+1):
+                grid[x][y] = not grid[x][y]
+    lines = data.split('\n')
+    grid = [[False for _ in range(1000)] for _ in range(1000)]
+    for line in lines:
+        op = get_op(line)
+        nw_match = re.search('.*?(\d+),(\d+)', line)
+        se_match = re.search('(\d+),(\d+)$', line.strip())
+        nw, se = get_p(nw_match), get_p(se_match)
+        if op == Op.toggle:
+            toggle(grid, nw, se)
+        else:
+            turn(grid, nw, se, op == Op.on)
+    return sum(sum(a) for a in grid)
 
 
