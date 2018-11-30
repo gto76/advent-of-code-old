@@ -1,31 +1,25 @@
+from collections import Counter, namedtuple, defaultdict
+from copy import copy, deepcopy
 from enum import Enum
-from collections import namedtuple, defaultdict
-import re
-import json
-from itertools import *
-from collections import Counter, defaultdict, namedtuple
-from copy import deepcopy
 from functools import reduce
+import hashlib
+from inspect import signature
+from itertools import *
+import json
+from math import *
 import operator as op
+import re
 import sys
 from time import sleep
-import hashlib
-from math import *
 
-from inspect import signature
+from util import *
 
 
-DATA_FILENAME = 'data2015/{}.data'
-
-# Problem Enum
-Prb = Enum('Prb', 'a b')
-
-# Position Tuple
-P = namedtuple('P', 'x y')
+DATA_FILENAME = 'data_2015/{}.data'
 
 
 ###
-##  UTIL
+##  MAIN
 #
 
 def run(fun):
@@ -98,10 +92,40 @@ def bit_not(n, numbits=8):
 #
 
 def p_1_a(data):
+    comms = data[0].split(', ')
+    p = P(0, 0)
+    d = D.n
+    for c in comms:
+        r = R(c[0])
+        d = ROTATE[(d, r)]
+        fac = int(c[1:])
+        p_n = MOVE[d]
+        p_n = P(p_n.x * fac, p_n.y * fac)
+        p = P(p.x + p_n.x, p.y + p_n.y)
+    return abs(p.x) + abs(p.y)
+
+
+def p_1_b(data):
+    comms = data[0].split(', ')
+    visited = []
+    p = P(0, 0)
+    visited.append(p)
+    d = D.n
+    for c in comms:
+        r = R(c[0])
+        d = ROTATE[(d, r)]
+        fac = int(c[1:])
+        p_n = MOVE[d]
+        for _ in range(fac):
+            p = P(p.x + p_n.x, p.y + p_n.y)
+            if p in visited:
+                return abs(p.x) + abs(p.y)
+            visited.append(p)
+
+
+def p_2_a(data):
     pass
 
 
-
-
-FUN = p_1_a
+FUN = p_1_b
 print(run(FUN))

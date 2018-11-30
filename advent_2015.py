@@ -1,27 +1,21 @@
+from collections import Counter, namedtuple, defaultdict
+from copy import copy, deepcopy
 from enum import Enum
-from collections import namedtuple, defaultdict
-import re
-import json
-from itertools import *
-from collections import Counter, defaultdict, namedtuple
-from copy import deepcopy
 from functools import reduce
+import hashlib
+from inspect import signature
+from itertools import *
+import json
+from math import *
 import operator as op
+import re
 import sys
 from time import sleep
-import hashlib
-from math import *
 
-from inspect import signature
+from util import *
 
 
 DATA_FILENAME = 'data_2015/{}.data'
-
-# Problem Enum
-Prb = Enum('Prb', 'a b')
-
-# Position Tuple
-P = namedtuple('P', 'x y')
 
 
 ###
@@ -126,11 +120,13 @@ def p_2(data):
 
 
 def p_3(data):
-    D = Enum('D', {'n': '^', 'e': '>', 's': 'v', 'w': '<'})
-    MOVE = {D.n: P(-1, 0), D.e: P(0, 1), D.s: P(1, 0), D.w: P(0, -1)}
+    # D = Enum('D', {'n': '^', 'e': '>', 's': 'v', 'w': '<'})
+    # MOVE = {D.n: P(-1, 0), D.e: P(0, 1), D.s: P(1, 0), D.w: P(0, -1)}
+    #
+    # def move(position, direction):
+    #     return P(*[sum(a) for a in zip(position, MOVE[direction])])
 
-    def move(position, direction):
-        return P(*[sum(a) for a in zip(position, MOVE[direction])])
+    d_dict = {'^': D.n, '>': D.e, 'v': D.s, '<': D.w}
 
     def get_visited_houses(path):
         position = P(0, 0)
@@ -140,7 +136,7 @@ def p_3(data):
             visited_houses.add(position)
         return visited_houses
 
-    path = [D(a) for a in data]
+    path = [d_dict[a] for a in data[0]]
     out_a = len(get_visited_houses(path))
     houses_santa = get_visited_houses(path[::2])
     houses_robo_santa = get_visited_houses(path[1::2])
@@ -911,5 +907,5 @@ def p_25_a():
                 return value
 
 
-FUN = p_9_b
+FUN = p_3
 print(run(FUN))
