@@ -83,20 +83,17 @@ class Bar:
             s.p('\n')
 
 
-def bit_not(n, numbits=8):
-    return (1 << numbits) - 1 - n
-
-
 ###
 ##  PROBLEMS
 #
 
 def p_1_a(data):
-    comms = data[0].split(', ')
+    commands = data[0].split(', ')
+    ROTS = {'L': R.l, 'R': R.r}
     p = P(0, 0)
     d = D.n
-    for c in comms:
-        r = R(c[0])
+    for c in commands:
+        r = ROTS[c[0]]
         d = ROTATE[(d, r)]
         fac = int(c[1:])
         p_n = MOVE[d]
@@ -106,13 +103,14 @@ def p_1_a(data):
 
 
 def p_1_b(data):
-    comms = data[0].split(', ')
+    commands = data[0].split(', ')
+    ROTS = {'L': R.l, 'R': R.r}
     visited = []
     p = P(0, 0)
     visited.append(p)
     d = D.n
-    for c in comms:
-        r = R(c[0])
+    for c in commands:
+        r = ROTS[c[0]]
         d = ROTATE[(d, r)]
         fac = int(c[1:])
         p_n = MOVE[d]

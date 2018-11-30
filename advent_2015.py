@@ -83,10 +83,6 @@ class Bar:
             s.p('\n')
 
 
-def bit_not(n, numbits=8):
-    return (1 << numbits) - 1 - n
-
-
 ###
 ##  PROBLEMS
 #
@@ -120,12 +116,6 @@ def p_2(data):
 
 
 def p_3(data):
-    # D = Enum('D', {'n': '^', 'e': '>', 's': 'v', 'w': '<'})
-    # MOVE = {D.n: P(-1, 0), D.e: P(0, 1), D.s: P(1, 0), D.w: P(0, -1)}
-    #
-    # def move(position, direction):
-    #     return P(*[sum(a) for a in zip(position, MOVE[direction])])
-
     d_dict = {'^': D.n, '>': D.e, 'v': D.s, '<': D.w}
 
     def get_visited_houses(path):
@@ -388,7 +378,8 @@ def p_8_b(data):
         print(line, ':')
         code = re.sub(r'\\\\', r'\\', code)
         code = re.sub(r'\\"', r'"', code)
-        # code = re.sub(r'\\x(..)', lambda a: bytearray.fromhex(a.group(1)).decode(), code)
+        # code = re.sub(r'\\x(..)',
+        #               lambda a: bytearray.fromhex(a.group(1)).decode(), code)
         code = re.sub(r'\\x(..)',
                       lambda a: bytes.fromhex(a.group(1)).decode('latin-1'),
                       code)
@@ -633,10 +624,10 @@ def p_19_a(data):
     out = set()
     for k, vvv in a_dict.items():
         for v in vvv:
-            mtchs = re.finditer(k, mol)
-            for mtch in mtchs:
-                start = mtch.start()
-                end = mtch.end()
+            matches = re.finditer(k, mol)
+            for match in matches:
+                start = match.start()
+                end = match.end()
                 new_line = mol[:start] + v + mol[end:]
                 out.add(new_line)
     return len(out)
@@ -653,9 +644,9 @@ def p_19_b(data):
         return mol, a_dict
 
     def get_new_mols(k, v, mol):
-        mtch = re.search(v, mol)
-        start = mtch.start()
-        end = mtch.end()
+        match = re.search(v, mol)
+        start = match.start()
+        end = match.end()
         new_line = mol[:start] + k + mol[end:]
         return [Sol(new_line)]
 
