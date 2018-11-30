@@ -10,11 +10,12 @@ import operator as op
 import sys
 from time import sleep
 import hashlib
+from math import *
 
 from inspect import signature
 
 
-DATA_FILENAME = '{}.data'
+DATA_FILENAME = 'data_2015/{}.data'
 
 # Problem Enum
 Prb = Enum('Prb', 'a b')
@@ -228,6 +229,67 @@ def p_6(data):
 
 
 def p_7_a(data):
+    Op_ = Enum('Op_', {'AND': (lambda o: o[0] & o[1],),
+                       'OR': (lambda o: o[0] | o[1],),
+                       'LSHIFT': (lambda o: o[0] << o[1],),
+                       'RSHIFT': (lambda o: o[0] >> o[1],),
+                       'NOT': (lambda o: bit_not(o[0], 16),)})
+    Value = type('Value', (), {'signal': None})
+    Wire = type('Wire', (), {'input': None, 'signal': None})
+    Gate = type('Gate', (), {'operation': None, 'operators': None,
+                             'signal': None})
+
+    def parse():
+        for line in data:
+            l, r = line.split(' -> ')
+            wire = wires[r]
+            op = get_op(l)
+            if not op:
+                l_obj = get_wire_or_val(l)
+                wire.input = l_obj
+                continue
+            gate = Gate()
+            gate.operation = op.value[0]
+            tok = [a for a in l.split() if a not in list(a.name for a in Op_)]
+            gate.operators = [get_wire_or_val(a) for a in tok]
+            wire.input = gate
+            gates.append(gate)
+
+    def get_op(line):
+        for op in Op_:
+            if op.name in line:
+                return op
+
+    def get_wire_or_val(arg):
+        if arg.isnumeric():
+            value = Value()
+            value.signal = int(arg)
+            return value
+        return wires[arg]
+
+    def fire_gates():
+        for gate in gates:
+            if gate.signal:
+                continue
+            operators = [a.signal for a in gate.operators]
+            if all(a for a in operators if a != 0):
+                gate.signal = gate.operation(operators)
+
+    def fire_wires():
+        for wire in wires.values():
+            if wire.input.signal is None:
+                continue
+            wire.signal = wire.input.signal
+
+    gates, wires = [], defaultdict(Wire)
+    parse()
+    while wires['a'].signal is None:
+        fire_wires()
+        fire_gates()
+    return wires['a'].signal
+
+
+def p_7_b(data):
     Op_ = Enum('Op_', {'AND': (lambda i, p: i[0] & i[1],),
                        'OR': (lambda i, p: i[0] | i[1],),
                        'LSHIFT': (lambda i, p: i[0] << p[0],),
@@ -244,61 +306,158 @@ def p_7_a(data):
             self.params = []
             self.signal = None
 
-    def get_op(line):
-        for op in Op_:
-            if op.name in line:
-                return op
+    gates, wires = [], defaultdict(Wire)
 
     def main():
-        values, gates, wires = parse()
-        while not wires['y'].signal:
+        parse()
+        wires['b'].signal = 956
+        while not wires['a'].signal:
             fire_wires(wires)
             fire_gates(gates)
-        return wires['y'].signal
+        return wires['a'].signal
 
     def parse():
-        values, gates, wires = [], [], defaultdict(Wire)
         for line in data:
             l, r = line.split(' -> ')
             wire = wires[r]
             op = get_op(l)
             if not op:
-                value = Value()
-                value.wire = wire
-                value.signal = int(l)
-                values.append(value)
-                wire.input = value
+                l_obj = get_wire_or_val(l)
+                wire.input = l_obj
                 continue
             gate = Gate()
             gate.operation_ = op.value[0]
             tok = l.split()
             if op in (Op_.AND, Op_.OR):
-                gate.wires_.append(wires[tok[0]])
-                gate.wires_.append(wires[tok[2]])
+                gate.wires_.append(get_wire_or_val(tok[0]))
+                gate.wires_.append(get_wire_or_val(tok[2]))
             elif op in (Op_.LSHIFT, Op_.RSHIFT):
-                gate.wires_.append(wires[tok[0]])
-                gate.params.append(int(tok[2]))
+                gate.wires_.append(get_wire_or_val(tok[0]))
+                gate.params.append(get_wire_or_val(tok[2]))
             else:
-                gate.wires_.append(wires[tok[1]])
+                gate.wires_.append(get_wire_or_val(tok[1]))
             wire.input = gate
             gates.append(gate)
-        return values, gates, wires
+
+    def get_op(line):
+        for op in Op_:
+            if op.name in line:
+                return op
+
+    def get_wire_or_val(arg):
+        if arg.isnumeric():
+            value = Value()
+            value.signal = int(arg)
+            return value
+        return wires[arg]
 
     def fire_gates(gates):
         for gate in gates:
             if gate.signal:
                 continue
             signals = [a.signal for a in gate.wires_]
-            if all(signals):
-                gate.signal = gate.operation_(signals, gate.params)
+            params = [a.signal for a in gate.params]
+            if all(a for a in signals + params if a != 0):
+                gate.signal = gate.operation_(signals, params)
 
     def fire_wires(wires):
         for wire in wires.values():
-            if not wire.input.signal:
+            if wire.signal is not None or wire.input.signal is None:
                 continue
             wire.signal = wire.input.signal
 
     return main()
+
+
+def p_8_a(data):
+    code_ch = 0
+    memory_ch = 0
+    for line in data:
+        memory_ch += len(line)
+        code = line[1:-1]
+        code = re.sub(r'\\\\', 'B', code)
+        code = re.sub(r'\\"', 'A', code)
+        code = re.sub(r'\\x..', 'X', code)
+        # print(line, code, len(line), len(code))
+        code_ch += len(code)
+    return memory_ch - code_ch
+
+
+def p_8_b(data):
+    code_ch = 0
+    memory_ch = 0
+    for line in data:
+        memory_ch += len(line)
+        code = line[1:-1]
+        print(line, ':')
+        code = re.sub(r'\\\\', r'\\', code)
+        code = re.sub(r'\\"', r'"', code)
+        # code = re.sub(r'\\x(..)', lambda a: bytearray.fromhex(a.group(1)).decode(), code)
+        code = re.sub(r'\\x(..)',
+                      lambda a: bytes.fromhex(a.group(1)).decode('latin-1'),
+                      code)
+        code = r'"\"' + code + r'\""'
+        print(code, len(line), len(code))
+        code_ch += len(code)
+    return memory_ch - code_ch
+
+
+def p_9_a(data):
+    def parse():
+        for line in data:
+            l, r = line.split(' = ')
+            a, b = l.split(' to ')
+            di_a = dist.setdefault(a, defaultdict(int))
+            di_b = dist.setdefault(b, defaultdict(int))
+            di_a[b] = int(r)
+            di_b[a] = int(r)
+
+    def get_dist(route):
+        out = 0
+        last_city = route[0]
+        for city in route[1:]:
+            out += dist[last_city][city]
+            last_city = city
+        return out
+
+    dist = {}
+    parse()
+    min_ = inf
+    cities = dist.keys()
+    for route in permutations(cities):
+        route_dist = get_dist(route)
+        if route_dist < min_:
+            min_ = route_dist
+    return min_
+
+
+def p_9_b(data):
+    def parse():
+        for line in data:
+            l, r = line.split(' = ')
+            a, b = l.split(' to ')
+            di_a = dist.setdefault(a, defaultdict(int))
+            di_b = dist.setdefault(b, defaultdict(int))
+            di_a[b] = int(r)
+            di_b[a] = int(r)
+
+    def get_dist(route):
+        out = 0
+        last_city = route[0]
+        for city in route[1:]:
+            out += dist[last_city][city]
+            last_city = city
+        return out
+
+    dist = {}
+    parse()
+    max_ = 0
+    cities = dist.keys()
+    for route in permutations(cities):
+        route_dist = get_dist(route)
+        if route_dist > max_:
+            max_ = route_dist
+    return max_
 
 
 def p_10(data):
@@ -752,5 +911,5 @@ def p_25_a():
                 return value
 
 
-FUN = p_7_a
+FUN = p_9_b
 print(run(FUN))
