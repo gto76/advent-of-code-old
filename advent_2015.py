@@ -116,8 +116,7 @@ def p_2(data):
 
 
 def p_3(data):
-    d_dict = {'^': D.n, '>': D.e, 'v': D.s, '<': D.w}
-
+    d_dict = get_dict('^>v<', D)
     def get_visited_houses(path):
         position = P(0, 0)
         visited_houses = {position}

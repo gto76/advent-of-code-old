@@ -22,6 +22,9 @@ TURN = {(D.n, R.l): D.w, (D.n, R.r): D.e,
         (D.s, R.l): D.e, (D.s, R.r): D.w,
         (D.w, R.l): D.s, (D.w, R.r): D.n}
 
+def get_dict(list_a, list_b):
+    return dict(zip(list_a, list_b))
+
 def bit_not(n, numbits=8):
     return (1 << numbits) - 1 - n
 
