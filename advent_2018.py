@@ -1,5 +1,6 @@
 from collections import Counter, namedtuple, defaultdict
 from copy import copy, deepcopy
+from datetime import datetime
 from enum import Enum
 from functools import reduce
 import hashlib
@@ -196,12 +197,108 @@ def p_3_b(data):
     return ids.difference(double_ids)
 
 
+def p_4_a(data):
+    class Event:
+        def __init__(self, d, ev):
+            self.d = d
+            self.ev = ev
+        def __str__(self):
+            return f'{self.d}: {self.ev}'
+
+    timeline = []
+    for line in data:
+        d = datetime.strptime(line[1:17], '%Y-%m-%d %H:%M')
+        ev = line[19:]
+        e = Event(d, ev)
+        timeline.append(e)
+    timeline = sorted(timeline, key=lambda a: a.d)
+    for t in timeline:
+        print(t)
+
+
+def p_5_a(data):
+    def process(line):
+        out = []
+        skip = False
+        for i, a in enumerate(line[:-1], 1):
+            if skip:
+                skip = False
+                continue
+            b = line[i]
+            if abs(ord(a) - ord(b)) == 32:
+                skip = True
+                continue
+            out.append(a)
+
+        if not skip:
+            out.append(line[-1])
+
+        return out
+
+
+    line = data[0]
+    out = process(line)
+    old_out = out
+
+    while True:
+        out = process(old_out)
+        if len(out) == len(old_out):
+            break
+        old_out = out
+
+
+    print(''.join(out))
+    return len(out)
+
+
+def p_5_b(data):
+    def process(line):
+        out = []
+        skip = False
+        for i, a in enumerate(line[:-1], 1):
+            if skip:
+                skip = False
+                continue
+            b = line[i]
+            if abs(ord(a) - ord(b)) == 32:
+                skip = True
+                continue
+            out.append(a)
+
+        if not skip:
+            out.append(line[-1])
+        return out
+
+    def get_len(line):
+        out = process(line)
+        old_out = out
+        while True:
+            out = process(old_out)
+            if len(out) == len(old_out):
+                break
+            old_out = out
+        return len(out)
+
+
+    line = data[0]
+    min_ = inf
+
+    for i in range(65, 65+32):
+        print(chr(i))
+        line_b = line.replace(chr(i), '')
+        line_b = line_b.replace(chr(i+32), '')
+        len_ = get_len(line_b)
+        print(len_)
+        if len_ < min_:
+            min_ = len_
+
+    # 6550
+    return min_
 
 
 
 
-
-FUN = p_3_a
+FUN = p_5_b
 print(run(FUN))
 
 
