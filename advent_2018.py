@@ -229,24 +229,18 @@ def p_5_a(data):
                 skip = True
                 continue
             out.append(a)
-
         if not skip:
             out.append(line[-1])
-
         return out
-
 
     line = data[0]
     out = process(line)
     old_out = out
-
     while True:
         out = process(old_out)
         if len(out) == len(old_out):
             break
         old_out = out
-
-
     print(''.join(out))
     return len(out)
 
@@ -264,7 +258,6 @@ def p_5_b(data):
                 skip = True
                 continue
             out.append(a)
-
         if not skip:
             out.append(line[-1])
         return out
@@ -279,10 +272,8 @@ def p_5_b(data):
             old_out = out
         return len(out)
 
-
     line = data[0]
     min_ = inf
-
     for i in range(65, 65+32):
         print(chr(i))
         line_b = line.replace(chr(i), '')
@@ -291,33 +282,93 @@ def p_5_b(data):
         print(len_)
         if len_ < min_:
             min_ = len_
-
-    # 6550
     return min_
 
 
+def p_6_a(data):
+    def parse_line(line):
+        y, x = line.split(', ')
+        coords.append(P(int(x), int(y)))
+
+    def get_bounds():
+        xxx = [a.x for a in coords]
+        yyy = [a.y for a in coords]
+        return P(min(xxx), min(yyy)), P(max(xxx), max(yyy))
+
+    def get_man(p1, p2):
+        return abs(p1.x - p2.x) + abs(p1.y - p2.y)
+
+    def get_in_of_closest(p):
+        out = []
+        for a in coords:
+            out.append(get_man(p, a))
+        return out.index(min(out))
+
+    coords = []
+    for line in data:
+        parse_line(line)
+
+    b_1, b_2 = get_bounds()
+
+    matrix = []
+
+    print(b_1.y, b_2.y)
+    for y in range(b_1.y, b_2.y+1):
+        print(y)
+        for x in range(b_1.x, b_2.x+1):
+            i = get_in_of_closest(P(x, y))
+            matrix.append(i)
+
+    c = Counter(matrix)
+    return str(c.most_common()[0][1])
 
 
-FUN = p_5_b
+
+def p_6_b(data):
+    #35039
+    def parse_line(line):
+        y, x = line.split(', ')
+        coords.append(P(int(x), int(y)))
+
+    def get_bounds():
+        x = [a.x for a in coords]
+        y = [a.y for a in coords]
+        return P(min(x), min(y)), P(max(x), max(y))
+
+    def get_man(p1, p2):
+        return abs(p1.x - p2.x) + abs(p1.y - p2.y)
+
+    def get_sum_of_distances(p):
+        return sum(get_man(a, p) for a in coords)
+
+    coords = []
+    for line in data:
+        parse_line(line)
+
+    b_1, b_2 = get_bounds()
+
+    out = 0
+    print(b_1.y, b_2.y)
+    for y in range(b_1.y, b_2.y+1):
+        for x in range(b_1.x, b_2.x+1):
+            sum_ = get_sum_of_distances(P(x, y))
+            if sum_ < 10000:
+                out += 1
+
+    return out
+
+
+def p_7_a(data):
+    pass
+
+
+
+
+
+
+
+
+
+
+FUN = p_7_a
 print(run(FUN))
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
