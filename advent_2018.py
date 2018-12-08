@@ -49,41 +49,6 @@ def get_file_contents(file_name):
         return [line.strip('\n') for line in f.readlines()]
 
 
-class Bar:
-    @staticmethod
-    def range(*args):
-        bar = Bar(len(list(range(*args))))
-        for i in range(*args):
-            yield i
-            bar.tick()
-
-    @staticmethod
-    def p(t):
-        sys.stdout.write(t)
-        sys.stdout.flush()
-
-    def foreach(elements):
-        bar = Bar(len(elements))
-        for el in elements:
-            yield el
-            bar.tick()
-
-    def __init__(s, steps, width=40):
-        s.st, s.wi, s.fl, s.i = steps, width, 0, 0
-        s.th = s.fl * s.st / s.wi
-        s.p(f"[{' ' * s.wi}]")
-        s.p('\b' * (s.wi + 1))
-
-    def tick(s):
-        s.i += 1
-        while s.i > s.th:
-            s.fl += 1
-            s.th = s.fl * s.st / s.wi
-            s.p('-')
-        if s.i == s.st:
-            s.p('\n')
-
-
 ###
 ##  PROBLEMS
 #
@@ -323,7 +288,7 @@ def p_6_a(data):
     return str(c.most_common()[0][1])
 
 
-def p_6_b(data):
+def p_6_parse(data):
     def parse_line(line):
         y, x = line.split(', ')
         coords.append(P(int(x), int(y)))
@@ -336,15 +301,15 @@ def p_6_b(data):
     def get_man(p1, p2):
         return abs(p1.x - p2.x) + abs(p1.y - p2.y)
 
-    def get_sum_of_distances(p):
-        return sum(get_man(a, p) for a in coords)
-
     coords = []
     for line in data:
         parse_line(line)
-
     b_1, b_2 = get_bounds()
+    return coords, b_1, b_2
 
+
+def p_6_b(data):
+    coords, b_1, b_2 = data
     out = 0
     print(b_1.y, b_2.y)
     for y in range(b_1.y, b_2.y+1):
@@ -376,8 +341,6 @@ def p_7_a(data):
         if k not in all_values:
             last = k
             break 
-
-
     out = []
     while True:
         out.append(root)
@@ -398,16 +361,11 @@ def p_8_a(data):
         nodes.append(node)
         return node
 
-
     line = data[0]
     nums = (int(a) for a in line.split())
     nodes = []
-
-    root = get_node(nums)
-
-    #out = 0
+    get_node(nums)
     return sum(sum(a.metas) for a in nodes)
-
 
 
 def p_8_b(data):
@@ -425,17 +383,9 @@ def p_8_b(data):
         nodes.append(node)
         return node
 
-
-    line = data[0]
-    nums = (int(a) for a in line.split())
-    nodes = []
-
-    root = get_node(nums)
-
     def get_val(node):
         if not node.nodes:
             return sum(node.metas)
-
         out = 0
         for i in node.metas:
             if len(node.nodes) < i or i == 0:
@@ -443,6 +393,10 @@ def p_8_b(data):
             out += get_val(node.nodes[i-1])
         return out
 
+    line = data[0]
+    nums = (int(a) for a in line.split())
+    nodes = []
+    root = get_node(nums)
     return get_val(root)
 
 
@@ -459,5 +413,5 @@ def p_8_b(data):
 
 
 
-FUN = p_8_b
+FUN = p_8_a
 print(run(FUN))
