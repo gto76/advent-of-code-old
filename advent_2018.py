@@ -323,9 +323,7 @@ def p_6_a(data):
     return str(c.most_common()[0][1])
 
 
-
 def p_6_b(data):
-    #35039
     def parse_line(line):
         y, x = line.split(', ')
         coords.append(P(int(x), int(y)))
@@ -359,7 +357,93 @@ def p_6_b(data):
 
 
 def p_7_a(data):
-    pass
+    def parse_line(line):
+        step = line[5]
+        step_n = line[-12]
+        parsed[step].add(step_n)
+
+
+    parsed = defaultdict(set)
+    for line in data:
+        parse_line(line)
+
+    all_values = set()
+    for v in parsed.values():
+        all_values.update(v)
+
+    last = None
+    for k in parsed.keys():
+        if k not in all_values:
+            last = k
+            break 
+
+
+    out = []
+    while True:
+        out.append(root)
+
+
+def p_8_a(data):
+    Node = namedtuple('Node', 'nodes metas')
+    def get_node(nums):
+        q_nodes = next(nums)
+        q_met = next(nums)
+        c_nodes = []
+        for _ in range(q_nodes):
+            c_nodes.append(get_node(nums))
+        metas = []
+        for _ in range(q_met):
+            metas.append(next(nums))
+        node = Node(c_nodes, metas)
+        nodes.append(node)
+        return node
+
+
+    line = data[0]
+    nums = (int(a) for a in line.split())
+    nodes = []
+
+    root = get_node(nums)
+
+    #out = 0
+    return sum(sum(a.metas) for a in nodes)
+
+
+
+def p_8_b(data):
+    Node = namedtuple('Node', 'nodes metas')
+    def get_node(nums):
+        q_nodes = next(nums)
+        q_met = next(nums)
+        c_nodes = []
+        for _ in range(q_nodes):
+            c_nodes.append(get_node(nums))
+        metas = []
+        for _ in range(q_met):
+            metas.append(next(nums))
+        node = Node(c_nodes, metas)
+        nodes.append(node)
+        return node
+
+
+    line = data[0]
+    nums = (int(a) for a in line.split())
+    nodes = []
+
+    root = get_node(nums)
+
+    def get_val(node):
+        if not node.nodes:
+            return sum(node.metas)
+
+        out = 0
+        for i in node.metas:
+            if len(node.nodes) < i or i == 0:
+                continue
+            out += get_val(node.nodes[i-1])
+        return out
+
+    return get_val(root)
 
 
 
@@ -370,5 +454,10 @@ def p_7_a(data):
 
 
 
-FUN = p_7_a
+
+
+
+
+
+FUN = p_8_b
 print(run(FUN))
