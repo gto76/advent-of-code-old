@@ -53,6 +53,7 @@ def get_file_contents(file_name):
 ##  PROBLEMS
 #
 
+
 def p_1_a(data):
     numbers = [int(a) for a in data]
     return sum(numbers)
@@ -124,7 +125,7 @@ def p_3_a(data):
     for line in data:
         parse_line(line)
     out = 0
-    for v in cnt.values():
+    for v in Bar.foreach(cnt.values()):
         if v > 1:
             out += 1
     return out
@@ -156,7 +157,7 @@ def p_3_b(data):
     for line in data:
         parse_line(line)
     double_ids = set()
-    for k, v in cnt.items():
+    for k, v in Bar.foreach(cnt.items()):
         if len(v.ids) > 1:
             double_ids.update(v.ids)
     return ids.difference(double_ids)
@@ -272,23 +273,17 @@ def p_6_a(data):
     coords = []
     for line in data:
         parse_line(line)
-
     b_1, b_2 = get_bounds()
-
     matrix = []
-
-    print(b_1.y, b_2.y)
-    for y in range(b_1.y, b_2.y+1):
-        print(y)
+    for y in Bar.range(b_1.y, b_2.y+1):
         for x in range(b_1.x, b_2.x+1):
             i = get_in_of_closest(P(x, y))
             matrix.append(i)
-
     c = Counter(matrix)
     return str(c.most_common()[0][1])
 
 
-def p_6_parse(data):
+def p_6_b(data):
     def parse_line(line):
         y, x = line.split(', ')
         coords.append(P(int(x), int(y)))
@@ -301,23 +296,19 @@ def p_6_parse(data):
     def get_man(p1, p2):
         return abs(p1.x - p2.x) + abs(p1.y - p2.y)
 
+    def get_sum_of_distances(p):
+        return sum(get_man(p, a) for a in coords)
+
     coords = []
     for line in data:
         parse_line(line)
     b_1, b_2 = get_bounds()
-    return coords, b_1, b_2
-
-
-def p_6_b(data):
-    coords, b_1, b_2 = data
     out = 0
-    print(b_1.y, b_2.y)
-    for y in range(b_1.y, b_2.y+1):
+    for y in Bar.range(b_1.y, b_2.y+1):
         for x in range(b_1.x, b_2.x+1):
             sum_ = get_sum_of_distances(P(x, y))
             if sum_ < 10000:
                 out += 1
-
     return out
 
 
@@ -326,7 +317,6 @@ def p_7_a(data):
         step = line[5]
         step_n = line[-12]
         parsed[step].add(step_n)
-
 
     parsed = defaultdict(set)
     for line in data:
@@ -412,6 +402,5 @@ def p_8_b(data):
 
 
 
-
-FUN = p_8_a
+FUN = p_8_b
 print(run(FUN))
