@@ -21,52 +21,14 @@ from time import sleep
 from util import *
 
 
-DATA_FILENAME = 'data_2017/{}.data'
+FILENAME_TEMPLATE = 'data_2017/{}.data'
 
 
 ###
-##  MAIN
+##  PROBLEMS
 #
 
-def main():
-    if len(sys.argv) < 2:
-        run_all()
-        sys.exit(0)
-    day = get_day(sys.argv)
-    challenge_name = 'day{}'.format(day)
-    result = get_result(challenge_name)
-    print(result)
-
-
-def run_all():
-    challenges = [a for a in globals() if a.startswith('day')]
-    for challenge_name in challenges:
-        result = get_result(challenge_name)
-        print('{}: {}'.format(challenge_name, result))
-
-
-def get_day(argv):
-    try:
-        return int(argv[1])
-    except ValueError:
-        print("Argument needs to be a challenge number", file=sys.stderr)
-        sys.exit(1)
-
-
-def get_result(challenge_name):
-    try:
-        data = get_data(challenge_name)
-        return globals()[challenge_name](data)
-    except KeyError:
-        print(f"Missing function {challenge_name}", file=sys.stderr)
-        sys.exit(3)
-
-
-###
-##  CHALLENGES
-#
-
-def day1(data):
+def p_1(data):
     def main():
         digits = [int(digit) for digit in next(data)]
         half_index = int(len(digits) / 2)
@@ -80,7 +42,7 @@ def day1(data):
     return main()
 
 
-def day2(data):
+def p_2(data):
     def main():
         lines_of_ints = [[int(a) for a in line.split()] for line in data]
         deltas = (max(ints) - min(ints) for ints in lines_of_ints)
@@ -97,7 +59,7 @@ def day2(data):
     return main()
 
 
-def day3(data):
+def p_3(data):
     HEADS = list(product([-1, 0, 1], [-1, 0, 1]))
     HEADS.remove((0, 0))
     LEFT_TURN = {(1, 0): (0, 1), (0, 1): (-1, 0), (-1, 0): (0, -1),
@@ -142,7 +104,7 @@ def day3(data):
     return main()
 
 
-def day4(data):
+def p_4(data):
     def main():
         phrases = [line.split() for line in data]
         return get_sum(phrases, has_no_dups), get_sum(phrases, has_no_anagrams)
@@ -160,7 +122,7 @@ def day4(data):
     return main()
 
 
-def day5(data):
+def p_5(data):
     def main():
         mem = [int(line) for line in data]
         return run(mem.copy()), run(mem.copy(), strange=True)
@@ -177,7 +139,7 @@ def day5(data):
     return main()
 
 
-def day6(data):
+def p_6(data):
     def main():
         banks = [int(a) for a in next(data).split()]
         states = {}
@@ -207,7 +169,7 @@ def day6(data):
     return main()
 
 
-def day7(data):
+def p_7(data):
     def main():
         nodes = [line.replace(',', '').split() for line in data]
         non_leafs = (node for node in nodes if len(node) > 2)
@@ -253,7 +215,7 @@ def day7(data):
     return main()
 
 
-def day8(data):
+def p_8(data):
     C = namedtuple('C', ['reg_e', 'op_e', 'val_e', 'reg_c', 'op_c', 'val_c'])
     OPS_COND = {'==': op.eq, '!=': op.ne, '>': op.gt, '<': op.lt, '>=': op.ge,
                 '<=': op.le}
@@ -282,7 +244,7 @@ def day8(data):
     return main()
 
 
-def day9(data):
+def p_9(data):
     def main():
         VARS = {'depth': 0, 'score': 0, 'garbage_len': 0, 'in_garbage': False,
                 'stream': iter(next(data))}
@@ -314,7 +276,7 @@ def day9(data):
     return main()
 
 
-def day10(data):
+def p_10(data):
     def main():
         lengths = [int(a) for a in next(data).split(',')]
         a_list = list(range(256))
@@ -340,7 +302,7 @@ def day10(data):
     return main()
 
 
-def day11(data):
+def p_11(data):
     S = Enum('S', 'n ne se s sw nw')
     DELTA = {0: {S.n: P(0, -1), S.ne: P(1, -1), S.se: P(1, 0), S.s: P(0, 1),
                  S.sw: P(-1, 0), S.nw: P(-1, -1)},
@@ -369,7 +331,7 @@ def day11(data):
     return main()
 
 
-def day12(data):
+def p_12(data):
     def main():
         edges = dict([get_item(line) for line in data])
         for line in data:
@@ -405,7 +367,7 @@ def day12(data):
 max_i = 0
 
 
-def day13(data):
+def p_13(data):
     # def get_severities(firewall):
     #     for i, layer in enumerate(firewall):
     #         if layer and layer[1][0]:
@@ -490,7 +452,7 @@ def day13(data):
     # return severity, out_2
 
 
-def day15(data):
+def p_15(data):
     def gen(factor, starting_value, mul_filter=1):
         while True:
             starting_value = (starting_value * factor) % 2147483647
@@ -515,7 +477,7 @@ def day15(data):
     return sum_a, sum_b
 
 
-def day16(data):
+def p_16(data):
     def main():
         commands = get_commands()
         reg_1 = get_reg()
@@ -568,7 +530,7 @@ def day16(data):
     return main()
 
 
-def day17(data):
+def p_17(data):
     steps = int(next(data))
 
     class Node:
@@ -601,7 +563,7 @@ def day17(data):
     return out_1, out_2
 
 
-def day18(data):
+def p_18(data):
     def main():
         code = [(a.strip().split()) for a in data]
         return problem_1(code), problem_2(code)
@@ -691,7 +653,7 @@ def day18(data):
     return main()
 
 
-def day19(data):
+def p_19(data):
     class S:
         """State"""
 
@@ -746,7 +708,7 @@ def day19(data):
     return main()
 
 
-def day20(data):
+def p_20(data):
     V = namedtuple('V', 'x y z')
     P = namedtuple('P', 'i p v a')
 
@@ -795,7 +757,7 @@ def day20(data):
     return main()
 
 
-def day21(data):
+def p_21(data):
     STARTING_POSITION = '.#./..#/###'
     Condition = namedtuple('Condition', 'cen on off')
 
@@ -874,7 +836,7 @@ def day21(data):
     return main()
 
 
-def day22(data):
+def p_22(data):
     Virus = type('Virus', (), {'pos': P(0, 0), 'dir': D.n, 'steps': []})
 
     def main():
@@ -945,7 +907,7 @@ def day22(data):
     return main()
 
 
-def day23(data):
+def p_23(data):
     Op = Enum('Op', 'set sub mul jnz')
     Co = namedtuple('Co', 'o x y')
 
@@ -1001,7 +963,7 @@ def day23(data):
     return main()
 
 
-def day24(data):
+def p_24(data):
     def main():
         components = [[int(a) for a in line.split('/')] for line in data]
         return max(get_max(0, components))
@@ -1020,10 +982,10 @@ def day24(data):
     return main()
 
 
-def day25(data):
+def p_25(data):
     class Bit:
         def __init__(s):
-            s.value = 0
+            s.i = 0
             s.neighbours = {}
 
         def get(s, side):
@@ -1106,58 +1068,8 @@ def day25(data):
     return main()
 
 
-###
-##  UTIL
-#
-
-def get_data(challenge_name):
-    try:
-        return get_file_contents(DATA_FILENAME.format(challenge_name))
-    except FileNotFoundError:
-        print("Missing data file {}".format(
-            DATA_FILENAME.format(challenge_name)), file=sys.stderr)
-        return
 
 
-def get_file_contents(file_name):
-    with open(file_name, encoding='utf-8') as f:
-        return (line.strip('\n') for line in f.readlines())
 
-
-class Bar:
-    @staticmethod
-    def range(*args):
-        bar = Bar(len(list(range(*args))))
-        for i in range(*args):
-            yield i
-            bar.tick()
-
-    def foreach(elements):
-        bar = Bar(len(elements))
-        for el in elements:
-            yield el
-            bar.tick()
-
-    def __init__(s, steps, width=40):
-        s.st, s.wi, s.fl, s.i = steps, width, 0, 0
-        s.th = s.fl * s.st / s.wi
-        s.p(f"[{' ' * s.wi}]")
-        s.p('\b' * (s.wi + 1))
-
-    def tick(s):
-        s.i += 1
-        while s.i > s.th:
-            s.fl += 1
-            s.th = s.fl * s.st / s.wi
-            s.p('-')
-        if s.i == s.st:
-            s.p('\n')
-
-    @staticmethod
-    def p(t):
-        sys.stdout.write(t)
-        sys.stdout.flush()
-
-
-if __name__ == '__main__':
-    main()
+FUN = p_8
+print(run(FUN, FILENAME_TEMPLATE))
