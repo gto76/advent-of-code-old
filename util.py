@@ -1,5 +1,6 @@
 from collections import namedtuple, defaultdict
 from enum import Enum
+from inspect import signature
 import sys
 
 # Position Tuple
@@ -9,7 +10,7 @@ P = namedtuple('P', 'x y')
 D = Enum('D', 'n e s w')
 
 # Rotation Enum
-R = Enum('R', 'l r')
+R = Enum('R', 'l s r')
 
 # Move dict
 MOVE = {D.n: P(0, 1), D.e: P(1, 0), D.s: P(0, -1), D.w: P(-1, 0)}
@@ -17,11 +18,20 @@ MOVE = {D.n: P(0, 1), D.e: P(1, 0), D.s: P(0, -1), D.w: P(-1, 0)}
 def move(position, direction):
     return P(*[sum(a) for a in zip(position, MOVE[direction])])
 
+# Move dict
+MOVE_SCR = {D.n: P(0, -1), D.e: P(1, 0), D.s: P(0, 1), D.w: P(-1, 0)}
+
+def move_scr(position, direction):
+    return P(*[sum(a) for a in zip(position, MOVE_SCR[direction])])
+
 # Rotate dict
-TURN = {(D.n, R.l): D.w, (D.n, R.r): D.e,
-        (D.e, R.l): D.n, (D.e, R.r): D.s,
-        (D.s, R.l): D.e, (D.s, R.r): D.w,
-        (D.w, R.l): D.s, (D.w, R.r): D.n}
+TURN = {(D.n, R.l): D.w, (D.n, R.r): D.e, (D.n, R.s): D.n,
+        (D.e, R.l): D.n, (D.e, R.r): D.s, (D.e, R.s): D.e,
+        (D.s, R.l): D.e, (D.s, R.r): D.w, (D.s, R.s): D.s,
+        (D.w, R.l): D.s, (D.w, R.r): D.n, (D.w, R.s): D.w}
+
+def turn(direction, rotation):
+    return TURN[(direction, rotation)]
 
 def get_dict(list_a, list_b):
     return dict(zip(list_a, list_b))
@@ -63,3 +73,28 @@ class Bar:
     def p(t):
         sys.stdout.write(t)
         sys.stdout.flush()
+
+def run(fun, filename_template):
+    sig = signature(fun)
+    no_parm = len(sig.parameters)
+    if no_parm == 0:
+        return fun()
+    problem_name = fun.__name__
+    if problem_name.endswith('_a') or problem_name.endswith('_b'):
+        problem_name = problem_name[:-2]
+    data = get_data(problem_name, filename_template)
+    return fun(data)
+
+
+def get_data(problem_name, filename_template):
+    try:
+        return get_file_contents(filename_template.format(problem_name))
+    except FileNotFoundError:
+        print("Missing data file {}".format(
+            DATA_FILENAME.format(problem_name)), file=sys.stderr)
+        return
+
+
+def get_file_contents(file_name):
+    with open(file_name, encoding='utf-8') as f:
+        return [line.strip('\n') for line in f.readlines()]
