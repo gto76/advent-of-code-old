@@ -1,7 +1,7 @@
 from collections import Counter, namedtuple, defaultdict
 from copy import copy, deepcopy
 from datetime import datetime
-from enum import Enum
+from enum import Enum, auto
 from functools import reduce
 import hashlib
 from itertools import *
@@ -132,23 +132,42 @@ def p_3_b(data):
 
 
 def p_4_a(data):
-    class Event:
-        def __init__(self, d, ev):
-            self.d = d
-            self.ev = ev
-        def __str__(self):
-            return f'{self.d}: {self.ev}'
-
-    timeline = []
-    for line in data:
-        d = datetime.strptime(line[1:17], '%Y-%m-%d %H:%M')
-        ev = line[19:]
-        e = Event(d, ev)
-        timeline.append(e)
-    timeline = sorted(timeline, key=lambda a: a.d)
-    for t in timeline:
-        print(t)
-
+    # class Shift:
+    #     def __init__(self):
+    #         self.
+    #
+    # class Guard:
+    #     def __init__(self, id_):
+    #         self.id_ = id_
+    #         self.shifts = {}
+    #
+    # class Event:
+    #     def __init__(self, d, ev):
+    #         self.d = d
+    #         self.ev = ev
+    #     def __str__(self):
+    #         return f'{self.d}: {self.ev}'
+    #
+    # timeline = []
+    # for line in data:
+    #     d = datetime.strptime(line[1:17], '%Y-%m-%d %H:%M')
+    #     ev = line[19:]
+    #     e = Event(d, ev)
+    #     timeline.append(e)
+    # timeline = sorted(timeline, key=lambda a: a.d)
+    #
+    # guards = {}
+    # guard = None
+    # for t in timeline:
+    #     if 'Guard' in t.ev:
+    #         g_id = re.search(r'#(\d+)', t.ev).group(1)
+    #         guard = guards.setdefault(g_id, Guard(g_id))
+    #         guard
+    #         continue
+    #     if 'falls asleep' in t.ev:
+    #
+    #     print(t)
+    pass
 
 def p_5_a(data):
     def process(line):
@@ -702,9 +721,178 @@ def p_13_b(data):
         carts = [move_cart(a) for a in carts]
 
 
-def p_14_a(data):
-    pass
-    
+def p_16_a(data):
+    class Observation:
+        def __init__(self):
+            self.before = None
+            self.comm = None
+            self.after = None
+
+    class Command(Enum):
+        addr = auto(), lambda r, a, b: r[a] + r[b]
+        addi = auto(), lambda r, a, b: r[a] + b
+        mulr = auto(), lambda r, a, b: r[a] * r[b]
+        muli = auto(), lambda r, a, b: r[a] * b
+        banr = auto(), lambda r, a, b: r[a] & r[b]
+        bani = auto(), lambda r, a, b: r[a] & b
+        borr = auto(), lambda r, a, b: r[a] | r[b]
+        bori = auto(), lambda r, a, b: r[a] | b
+        setr = auto(), lambda r, a, b: r[a]
+        seti = auto(), lambda r, a, b: a
+        gtir = auto(), lambda r, a, b: 1 if a > r[b] else 0
+        gtri = auto(), lambda r, a, b: 1 if r[a] > b else 0
+        gtrr = auto(), lambda r, a, b: 1 if r[a] > r[b] else 0
+        eqir = auto(), lambda r, a, b: 1 if a == r[b] else 0
+        eqri = auto(), lambda r, a, b: 1 if r[a] == b else 0
+        eqrr = auto(), lambda r, a, b: 1 if r[a] == r[b] else 0
+
+    def parse():
+        out = []
+        iter_ = iter(data)
+        while True:
+            obs = get_observation(iter_)
+            if not obs:
+                break
+            out.append(obs)
+            next(iter_)
+        return out
+
+    def get_observation(d_iter):
+        obs = Observation()
+        before_line = next(d_iter, '')
+        if 'Before' not in before_line:
+            return
+        obs.before = get_list(before_line)
+        obs.comm = [int(a) for a in next(d_iter).split()]
+        after_line = next(d_iter)
+        obs.after = get_list(after_line)
+        return obs
+
+    def get_list(line):
+        before_list = re.search('\[(.*)\]', line).group(1).split(',')
+        return [int(a) for a in before_list]
+
+    def get_no_matches(obs):
+        out = 0
+        for op in list(Command):
+            if check(obs, op):
+                out += 1
+        return out
+
+    def check(obs, op):
+        op = op.value[1]
+        res = op(obs.before, obs.comm[1], obs.comm[2])
+        after = list(obs.before)
+        after[obs.comm[3]] = res
+        return after == obs.after
+
+    observations = parse()
+    out = 0
+    for obs in observations:
+        if get_no_matches(obs) >= 3:
+            out += 1
+    return out
+
+
+def p_16_b(data):
+    class Observation:
+        def __init__(self):
+            self.before = None
+            self.inst = None
+            self.after = None
+
+    class Operation(Enum):
+        addr = auto(), lambda r, a, b: r[a] + r[b]
+        addi = auto(), lambda r, a, b: r[a] + b
+        mulr = auto(), lambda r, a, b: r[a] * r[b]
+        muli = auto(), lambda r, a, b: r[a] * b
+        banr = auto(), lambda r, a, b: r[a] & r[b]
+        bani = auto(), lambda r, a, b: r[a] & b
+        borr = auto(), lambda r, a, b: r[a] | r[b]
+        bori = auto(), lambda r, a, b: r[a] | b
+        setr = auto(), lambda r, a, b: r[a]
+        seti = auto(), lambda r, a, b: a
+        gtir = auto(), lambda r, a, b: 1 if a > r[b] else 0
+        gtri = auto(), lambda r, a, b: 1 if r[a] > b else 0
+        gtrr = auto(), lambda r, a, b: 1 if r[a] > r[b] else 0
+        eqir = auto(), lambda r, a, b: 1 if a == r[b] else 0
+        eqri = auto(), lambda r, a, b: 1 if r[a] == b else 0
+        eqrr = auto(), lambda r, a, b: 1 if r[a] == r[b] else 0
+
+    def parse():
+        out = []
+        iter_ = iter(data)
+        while True:
+            obs = get_observation(iter_)
+            if not obs:
+                break
+            out.append(obs)
+            next(iter_)
+        next(iter_)
+        return out, list(iter_)
+
+    def get_observation(d_iter):
+        obs = Observation()
+        before_line = next(d_iter, '')
+        if 'Before' not in before_line:
+            return
+        obs.before = get_list(before_line)
+        obs.inst = [int(a) for a in next(d_iter).split()]
+        after_line = next(d_iter)
+        obs.after = get_list(after_line)
+        return obs
+
+    def get_list(line):
+        before_list = re.search('\[(.*)\]', line).group(1).split(',')
+        return [int(a) for a in before_list]
+
+    def get_operations(obs):
+        out = set()
+        for op in list(Operation):
+            if check(obs, op):
+                out.add(op)
+        return out
+
+    def check(obs, op):
+        op = op.value[1]
+        res = op(obs.before, obs.inst[1], obs.inst[2])
+        after = list(obs.before)
+        after[obs.inst[3]] = res
+        return after == obs.after
+
+    def first_pass(observations):
+        out = {}
+        for obs in observations:
+            opcode = obs.inst[0]
+            operations = get_operations(obs)
+            if opcode not in out:
+                out[opcode] = operations
+            else:
+                out[opcode] = out[opcode].intersection(operations)
+        return out
+
+    def deduce(opcodes):
+        found = {list(a)[0] for a in opcodes.values() if len(a) == 1}
+        for operations in opcodes.values():
+            if len(operations) == 1:
+                continue
+            striped = operations.difference(found)
+            operations.clear()
+            operations.update(striped)
+
+    def no_of_op(opcodes):
+        return len([a for set_ in opcodes.values() for a in set_])
+
+    observations, instructions = parse()
+    opcodes = first_pass(observations)
+    while no_of_op(opcodes) != len(opcodes):
+        deduce(opcodes)
+    regs = [0, 0, 0, 0]
+    for inst in instructions:
+        inst = [int(a) for a in inst.split()]
+        op = list(opcodes[inst[0]])[0].value[1]
+        regs[inst[3]] = op(regs, inst[1], inst[2])
+    return regs[0]
 
 
 
@@ -714,10 +902,5 @@ def p_14_a(data):
 
 
 
-
-
-
-
-
-FUN = p_1_a
+FUN = p_16_b
 print(run(FUN, FILENAME_TEMPLATE))
