@@ -132,42 +132,66 @@ def p_3_b(data):
 
 
 def p_4_a(data):
-    # class Shift:
-    #     def __init__(self):
-    #         self.
-    #
-    # class Guard:
-    #     def __init__(self, id_):
-    #         self.id_ = id_
-    #         self.shifts = {}
-    #
-    # class Event:
-    #     def __init__(self, d, ev):
-    #         self.d = d
-    #         self.ev = ev
-    #     def __str__(self):
-    #         return f'{self.d}: {self.ev}'
-    #
-    # timeline = []
-    # for line in data:
-    #     d = datetime.strptime(line[1:17], '%Y-%m-%d %H:%M')
-    #     ev = line[19:]
-    #     e = Event(d, ev)
-    #     timeline.append(e)
-    # timeline = sorted(timeline, key=lambda a: a.d)
-    #
-    # guards = {}
-    # guard = None
-    # for t in timeline:
-    #     if 'Guard' in t.ev:
-    #         g_id = re.search(r'#(\d+)', t.ev).group(1)
-    #         guard = guards.setdefault(g_id, Guard(g_id))
-    #         guard
-    #         continue
-    #     if 'falls asleep' in t.ev:
-    #
-    #     print(t)
-    pass
+    class Event:
+        def __init__(self, date_, text):
+            self.date = date_
+            self.text = text
+
+    class Guard:
+        def __init__(self, id_):
+            self.id = id_
+            self.shifts = []
+        def get_minutes(self):
+            return sum(a.get_minutes() for a in self.shifts)
+        def get_minute(self):
+            out = []
+            for i in range(60):
+                sum_ = sum(a.get_minute(i) for a in self.shifts)
+                out.append(sum_)
+            return out.index(max(out))
+
+    class Shift:
+        def __init__(self):
+            self.ranges = []
+        def set_asleep(self, minute):
+            self.ranges.append([minute])
+        def set_awake(self, minute):
+            self.ranges[-1].append(minute)
+        def get_minutes(self):
+            return sum(a[1] - a[0] for a in self.ranges)
+        def get_minute(self, minute):
+            for range_ in self.ranges:
+                if range_[0] <= minute < range_[1]:
+                    return 1
+            return 0
+
+    def parse_line(line):
+        date_ = datetime.strptime(line[1:17], '%Y-%m-%d %H:%M')
+        text = line[19:]
+        return Event(date_, text)
+
+    def get_guards(timeline):
+        out = {}
+        guard = None
+        for event in timeline:
+            if 'Guard' in event.text:
+                g_id = int(re.search(r'#(\d+)', event.text).group(1))
+                guard = out.setdefault(g_id, Guard(g_id))
+                guard.shifts.append(Shift())
+            elif 'falls asleep' in event.text:
+                guard.shifts[-1].set_asleep(event.date.minute)
+            elif 'wakes up' in event.text:
+                guard.shifts[-1].set_awake(event.date.minute)
+        return out
+
+    timeline = [parse_line(a) for a in data]
+    timeline = sorted(timeline, key=lambda a: a.date)
+    guards = get_guards(timeline)
+    max_minutes, max_guard_id = max((a.get_minutes(), a.id)
+                                    for a in guards.values())
+    minute = guards[max_guard_id].get_minute()
+    return max_guard_id * minute
+
 
 def p_5_a(data):
     def process(line):
@@ -541,7 +565,7 @@ def p_9_b():
     return max(players)
 
 
-def p_10_a(data):
+def p_10(data):
     class Point:
         def __init__(self, p, v):
             self.p = p
@@ -657,68 +681,69 @@ def p_13_a(data):
                 return f'{collision_p.x},{collision_p.y}'
 
 
-def p_13_b(data):
-    class Cart:
-        def __init__(self, p, d):
-            self.p = p
-            self.d = d
-            self.r = R.l
-        def __repr__(self):
-            return f'{self.__dict__}'
-
-    def get_carts():
-        out = []
-        for y, line in enumerate(data):
-            for x, ch in enumerate(line):
-                if ch in dd:
-                    p = P(x, y)
-                    d = dd[ch]
-                    cart = Cart(p, d)
-                    out.append(cart)
-        return out
-
-    def get_track():
-        out = []
-        cc = {'^': '|', 'v': '|', '>': '-', '<': '-'}
-        for line in data:
-            line_list = []
-            for ch in line:
-                if ch in dd:
-                    ch = cc[ch]
-                line_list.append(ch)
-            out.append(line_list)
-        return out
-
-    def move_cart(cart):
-        cart.d = get_dir(cart)
-        p = move_scr(cart.p, cart.d)
-        if p in [a.p for a in carts]:
-            return p
-        cart.p = p
-
-    def get_dir(cart):
-        ch = track[cart.p.y][cart.p.x]
-        if ch in '|-':
-            return cart.d
-        if ch == '+':
-            out = turn(cart.d, cart.r)
-            cart.r = R.l if cart.r == R.r else R(cart.r.value+1)
-            return out
-        if ch in '\/':
-            return tt[(ch, cart.d)]
-
-    dd = get_dict('^>v<', D)
-    tt = {('/', D.n): D.e, ('/', D.e): D.n, ('/', D.s): D.w, ('/', D.w): D.s,
-          ('\\', D.n): D.w, ('\\', D.e): D.s, ('\\', D.s): D.e,
-          ('\\', D.w): D.n}
-    carts = get_carts()
-    track = get_track()
-
-    while True:
-        if len(carts) == 1:
-            return f'{carts[0].p.x},{carts[0].p.y}'
-        carts = sorted(carts, key=lambda a: (a.p.y, a.p.x))
-        carts = [move_cart(a) for a in carts]
+def p_13_b():
+    # class Cart:
+    #     def __init__(self, p, d):
+    #         self.p = p
+    #         self.d = d
+    #         self.r = R.l
+    #     def __repr__(self):
+    #         return f'{self.__dict__}'
+    #
+    # def get_carts():
+    #     out = []
+    #     for y, line in enumerate(data):
+    #         for x, ch in enumerate(line):
+    #             if ch in dd:
+    #                 p = P(x, y)
+    #                 d = dd[ch]
+    #                 cart = Cart(p, d)
+    #                 out.append(cart)
+    #     return out
+    #
+    # def get_track():
+    #     out = []
+    #     cc = {'^': '|', 'v': '|', '>': '-', '<': '-'}
+    #     for line in data:
+    #         line_list = []
+    #         for ch in line:
+    #             if ch in dd:
+    #                 ch = cc[ch]
+    #             line_list.append(ch)
+    #         out.append(line_list)
+    #     return out
+    #
+    # def move_cart(cart):
+    #     cart.d = get_dir(cart)
+    #     p = move_scr(cart.p, cart.d)
+    #     if p in [a.p for a in carts]:
+    #         return p
+    #     cart.p = p
+    #
+    # def get_dir(cart):
+    #     ch = track[cart.p.y][cart.p.x]
+    #     if ch in '|-':
+    #         return cart.d
+    #     if ch == '+':
+    #         out = turn(cart.d, cart.r)
+    #         cart.r = R.l if cart.r == R.r else R(cart.r.value+1)
+    #         return out
+    #     if ch in '\/':
+    #         return tt[(ch, cart.d)]
+    #
+    # dd = get_dict('^>v<', D)
+    # tt = {('/', D.n): D.e, ('/', D.e): D.n, ('/', D.s): D.w, ('/', D.w): D.s,
+    #       ('\\', D.n): D.w, ('\\', D.e): D.s, ('\\', D.s): D.e,
+    #       ('\\', D.w): D.n}
+    # carts = get_carts()
+    # track = get_track()
+    #
+    # while True:
+    #     if len(carts) == 1:
+    #         return f'{carts[0].p.x},{carts[0].p.y}'
+    #     carts = sorted(carts, key=lambda a: (a.p.y, a.p.x))
+    #     carts = [move_cart(a) for a in carts]
+    pass
 
 
 def p_16_a(data):
@@ -895,12 +920,12 @@ def p_16_b(data):
     return regs[0]
 
 
+def p_17_a(data):
+    pass
 
 
 
 
 
-
-
-FUN = p_16_b
+FUN = p_17_a
 print(run(FUN, FILENAME_TEMPLATE))
