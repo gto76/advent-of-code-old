@@ -70,7 +70,7 @@ def p_2_b(data):
     for i, line in enumerate(data):
         for j in range(0, len(line)):
             line_out = ''.join(exclude(j, line))
-            if exists(line_out, data[i+1:], j):
+            if exists(line_out, data[i + 1:], j):
                 return line_out
 
 
@@ -85,8 +85,8 @@ def p_3_a(data):
         fill_cnt(p_off, p_wid)
 
     def fill_cnt(off, wid):
-        for i in range(off.x, off.x+wid.x):
-            for j in range(off.y, off.y+wid.y):
+        for i in range(off.x, off.x + wid.x):
+            for j in range(off.y, off.y + wid.y):
                 cnt[P(i, j)] += 1
 
     cnt = defaultdict(int)
@@ -116,8 +116,8 @@ def p_3_b(data):
         fill_cnt(p_off, p_wid, id_)
 
     def fill_cnt(off, wid, id_):
-        for i in range(off.x, off.x+wid.x):
-            for j in range(off.y, off.y+wid.y):
+        for i in range(off.x, off.x + wid.x):
+            for j in range(off.y, off.y + wid.y):
                 cnt[P(i, j)].ids.append(id_)
 
     cnt = defaultdict(Square)
@@ -141,8 +141,10 @@ def p_4_a(data):
         def __init__(self, id_):
             self.id = id_
             self.shifts = []
+
         def get_minutes(self):
             return sum(a.get_minutes() for a in self.shifts)
+
         def get_minute(self):
             out = []
             for i in range(60):
@@ -153,12 +155,16 @@ def p_4_a(data):
     class Shift:
         def __init__(self):
             self.ranges = []
+
         def set_asleep(self, minute):
             self.ranges.append([minute])
+
         def set_awake(self, minute):
             self.ranges[-1].append(minute)
+
         def get_minutes(self):
             return sum(a[1] - a[0] for a in self.ranges)
+
         def get_minute(self, minute):
             for range_ in self.ranges:
                 if range_[0] <= minute < range_[1]:
@@ -251,10 +257,10 @@ def p_5_b(data):
 
     line = data[0]
     min_ = inf
-    for i in range(65, 65+32):
+    for i in range(65, 65 + 32):
         print(chr(i))
         line_b = line.replace(chr(i), '')
-        line_b = line_b.replace(chr(i+32), '')
+        line_b = line_b.replace(chr(i + 32), '')
         len_ = get_len(line_b)
         print(len_)
         if len_ < min_:
@@ -286,8 +292,8 @@ def p_6_a(data):
         parse_line(line)
     b_1, b_2 = get_bounds()
     matrix = []
-    for y in Bar.range(b_1.y, b_2.y+1):
-        for x in range(b_1.x, b_2.x+1):
+    for y in Bar.range(b_1.y, b_2.y + 1):
+        for x in range(b_1.x, b_2.x + 1):
             i = get_in_of_closest(P(x, y))
             matrix.append(i)
     c = Counter(matrix)
@@ -315,8 +321,8 @@ def p_6_b(data):
         parse_line(line)
     b_1, b_2 = get_bounds()
     out = 0
-    for y in Bar.range(b_1.y, b_2.y+1):
-        for x in range(b_1.x, b_2.x+1):
+    for y in Bar.range(b_1.y, b_2.y + 1):
+        for x in range(b_1.x, b_2.x + 1):
             sum_ = get_sum_of_distances(P(x, y))
             if sum_ < 10000:
                 out += 1
@@ -427,6 +433,7 @@ def p_7_b(data):
 
 def p_8_a(data):
     Node = namedtuple('Node', 'nodes metas')
+
     def get_node(nums):
         q_nodes = next(nums)
         q_met = next(nums)
@@ -449,6 +456,7 @@ def p_8_a(data):
 
 def p_8_b(data):
     Node = namedtuple('Node', 'nodes metas')
+
     def get_node(nums):
         q_nodes = next(nums)
         q_met = next(nums)
@@ -469,7 +477,7 @@ def p_8_b(data):
         for i in node.metas:
             if len(node.nodes) < i or i == 0:
                 continue
-            out += get_val(node.nodes[i-1])
+            out += get_val(node.nodes[i - 1])
         return out
 
     line = data[0]
@@ -513,7 +521,7 @@ def p_9_a():
     last = Marble(0)
     last.left = last
     last.right = last
-    for i_m, i_p in zip(range(1, NO_MARBLES+1), cycle(range(NO_PL))):
+    for i_m, i_p in zip(range(1, NO_MARBLES + 1), cycle(range(NO_PL))):
         if i_m % 23 == 0:
             last = rearange(i_m, i_p, last)
             continue
@@ -556,7 +564,7 @@ def p_9_b():
     last.left = last
     last.right = last
     bar = Bar(NO_MARBLES)
-    for i_m, i_p in zip(range(1, NO_MARBLES+1), cycle(range(NO_PL))):
+    for i_m, i_p in zip(range(1, NO_MARBLES + 1), cycle(range(NO_PL))):
         bar.tick()
         if i_m % 23 == 0:
             last = rearange(i_m, i_p, last)
@@ -573,11 +581,11 @@ def p_10(data):
 
     def parse_line(a):
         x, y, v_x, v_y = int(a[10:16]), int(a[18:24]), int(a[36:38]), \
-            int(a[40:42])
+                         int(a[40:42])
         point = Point(P(x, y), P(v_x, v_y))
         points.append(point)
 
-    def move():
+    def move_point():
         for point in points:
             x = point.p.x + point.v.x
             y = point.p.y + point.v.y
@@ -609,7 +617,7 @@ def p_10(data):
     for line in data:
         parse_line(line)
     for i in count():
-        move()
+        move_point()
         if points_together(points):
             print(i)
             p_min, p_max = points_together(points)
@@ -622,6 +630,7 @@ def p_13_a(data):
             self.p = p
             self.d = d
             self.r = R.l
+
         def __repr__(self):
             return f'{self.__dict__}'
 
@@ -650,18 +659,18 @@ def p_13_a(data):
 
     def move_cart(cart):
         cart.d = get_dir(cart)
-        p = move_scr(cart.p, cart.d)
+        p = move(cart.p, cart.d)
         if p in [a.p for a in carts]:
             return p
         cart.p = p
 
     def get_dir(cart):
-        ch = track[cart.p.y][cart.p.x] 
+        ch = track[cart.p.y][cart.p.x]
         if ch in '|-':
             return cart.d
         if ch == '+':
             out = turn(cart.d, cart.r)
-            cart.r = R.l if cart.r == R.r else R(cart.r.value+1)
+            cart.r = R.l if cart.r == R.r else R(cart.r.value + 1)
             return out
         if ch in '\/':
             return tt[(ch, cart.d)]
@@ -715,7 +724,7 @@ def p_13_b():
     #
     # def move_cart(cart):
     #     cart.d = get_dir(cart)
-    #     p = move_scr(cart.p, cart.d)
+    #     p = move(cart.p, cart.d)
     #     if p in [a.p for a in carts]:
     #         return p
     #     cart.p = p
@@ -921,10 +930,70 @@ def p_16_b(data):
 
 
 def p_17_a(data):
-    pass
+    Matter = Enum('Matter', 'clay watter')
 
+    class Vein:
+        def __init__(self, x, y):
+            self.x = x
+            self.y = y
 
+    def parse_line(line):
+        x = parse_coordinate(line, 'x')
+        y = parse_coordinate(line, 'y')
+        return Vein(x, y)
 
+    def parse_coordinate(line, coord_id):
+        str_ = re.search(coord_id + r'=([0-9.]+)', line).group(1)
+        if '..' in str_:
+            start, stop = (int(a) for a in str_.split('..'))
+            return range(start, stop + 1)
+        return int(str_)
+
+    def get_squares(veins):
+        out = {}
+        for vein in veins:
+            if type(vein.x) == range:
+                positions = [P(x, vein.y) for x in vein.x]
+            else:
+                positions = [P(vein.x, y) for y in vein.y]
+            for pos in positions:
+                out[pos] = Matter.clay
+        return out
+
+    def flow(pos):
+        if pos.y > max_y:
+            return True
+        squares[pos] = Matter.watter
+        if try_direction(pos, D.s):
+            return True
+        left = try_direction(pos, D.w)
+        right = try_direction(pos, D.e)
+        return left or right
+
+    def try_direction(pos, dir_):
+        new_pos = move(pos, dir_)
+        if new_pos in squares:
+            return False
+        return flow(new_pos)
+
+    veins = [parse_line(a) for a in data]
+    squares = get_squares(veins)
+    min_y, max_y = min(a.y for a in squares), max(a.y for a in squares)
+    flow(P(500, 0))
+
+    # for y in range(14):
+    #     for x in range(494, 508):
+    #         p = P(x, y)
+    #         if p not in squares:
+    #             print('.', end='')
+    #         elif squares[p] == Matter.clay:
+    #             print('#', end='')
+    #         else:
+    #             print('~', end='')
+    #     print()
+
+    return sum(1 for p, m in squares.items()
+               if m == Matter.watter and p.y >= min_y)
 
 
 FUN = p_17_a

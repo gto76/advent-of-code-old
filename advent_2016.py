@@ -67,7 +67,7 @@ def p_2_a(data):
     for line in data:
         for command in line:
             dir_ = MV[command]
-            new_pos = move(pos, dir_)
+            new_pos = move_mat(pos, dir_)
             if new_pos not in PAD:
                 continue
             pos = new_pos
@@ -89,7 +89,7 @@ def p_2_b(data):
     for line in data:
         for command in line:
             dir_ = MV[command]
-            new_pos = move(pos, dir_)
+            new_pos = move_mat(pos, dir_)
             if new_pos not in PAD:
                 continue
             pos = new_pos

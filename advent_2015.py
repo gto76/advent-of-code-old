@@ -56,7 +56,7 @@ def p_3(data):
         position = P(0, 0)
         visited_houses = {position}
         for direction in path:
-            position = move(position, direction)
+            position = move_mat(position, direction)
             visited_houses.add(position)
         return visited_houses
 
