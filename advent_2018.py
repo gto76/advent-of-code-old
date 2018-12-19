@@ -932,15 +932,10 @@ def p_16_b(data):
 def p_17_a(data):
     Matter = Enum('Matter', 'clay watter')
 
-    class Vein:
-        def __init__(self, x, y):
-            self.x = x
-            self.y = y
-
     def parse_line(line):
         x = parse_coordinate(line, 'x')
         y = parse_coordinate(line, 'y')
-        return Vein(x, y)
+        return P(x, y)
 
     def parse_coordinate(line, coord_id):
         str_ = re.search(coord_id + r'=([0-9.]+)', line).group(1)
@@ -976,10 +971,13 @@ def p_17_a(data):
             return False
         return flow(new_pos)
 
+    old_rec_limit = sys.getrecursionlimit()
+    sys.setrecursionlimit(10000)
     veins = [parse_line(a) for a in data]
     squares = get_squares(veins)
     min_y, max_y = min(a.y for a in squares), max(a.y for a in squares)
     flow(P(500, 0))
+    sys.setrecursionlimit(old_rec_limit)
 
     # for y in range(14):
     #     for x in range(494, 508):
@@ -991,6 +989,24 @@ def p_17_a(data):
     #         else:
     #             print('~', end='')
     #     print()
+
+    def get_p(p):
+        if p not in squares:
+            return 0
+        if squares[p] == Matter.clay:
+            return 100
+        return 202
+
+    min_x, max_x = min(a.x for a in squares), max(a.x for a in squares)
+    width, height = max_x - min_x + 1, max_y + 1
+    out = [0] * width * height
+    for p, m in squares.items():
+        out[p.y*width + p.x-min_x] = get_p(p)
+
+    from PIL import Image
+    new_img = Image.new("L", (width, height), "white")
+    new_img.putdata(out)
+    new_img.save('out.png')
 
     return sum(1 for p, m in squares.items()
                if m == Matter.watter and p.y >= min_y)
