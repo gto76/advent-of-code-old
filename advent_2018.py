@@ -929,8 +929,8 @@ def p_16_b(data):
     return regs[0]
 
 
-def p_17_a(data):
-    Matter = Enum('Matter', 'clay watter')
+def p_17(data):
+    Matter = Enum('Matter', 'clay water running_water')
 
     def parse_line(line):
         x = parse_coordinate(line, 'x')
@@ -956,20 +956,62 @@ def p_17_a(data):
         return out
 
     def flow(pos):
-        if pos.y > max_y:
-            return True
-        squares[pos] = Matter.watter
-        if try_direction(pos, D.s):
-            return True
-        left = try_direction(pos, D.w)
-        right = try_direction(pos, D.e)
-        return left or right
+        squares[pos] = Matter.running_water
+        if pos.y == max_y:
+            return
+        below_ = below(pos)
+        if below_ not in squares:
+            flow(below_)
+        if squares[below_] == Matter.running_water:
+            return
+        spread(pos)
 
-    def try_direction(pos, dir_):
-        new_pos = move(pos, dir_)
-        if new_pos in squares:
-            return False
-        return flow(new_pos)
+    def spread(pos):
+        left_extreme, left_sink = get_p_extreme(pos, D.w)
+        right_extreme, right_sink = get_p_extreme(pos, D.e)
+        no_sink = not (left_sink or right_sink)
+        if no_sink:
+            fill_level(left_extreme, right_extreme, Matter.water)
+            return
+        fill_level(left_extreme, right_extreme, Matter.running_water)
+        if left_sink:
+            flow(left_extreme)
+        if right_sink:
+            flow(right_extreme)
+
+    def get_p_extreme(pos, dir_):
+        while True:
+            pos_n = move(pos, dir_)
+            if pos_n in squares and squares[pos_n] == Matter.clay:
+                return pos, False
+            elif below(pos_n) not in squares \
+                    or squares[below(pos_n)] == Matter.running_water:
+                return pos_n, True
+            pos = pos_n
+
+    def fill_level(left_extreme, right_extreme, matter):
+        for x in range(left_extreme.x, right_extreme.x + 1):
+            squares[P(x, left_extreme.y)] = matter
+
+    def save_image():
+        def get_p(p):
+            if p not in squares:
+                return 0
+            elif squares[p] == Matter.clay:
+                return 100
+            elif squares[p] == Matter.running_water:
+                return 255
+            return 200
+
+        min_x, max_x = min(a.x for a in squares), max(a.x for a in squares)
+        width, height = max_x - min_x + 1, max_y + 1
+        out = [0] * width * height
+        for p, m in squares.items():
+            out[p.y * width + p.x - min_x] = get_p(p)
+        from PIL import Image
+        new_img = Image.new("L", (width, height), "white")
+        new_img.putdata(out)
+        new_img.save('p_17.png')
 
     old_rec_limit = sys.getrecursionlimit()
     sys.setrecursionlimit(10000)
@@ -979,38 +1021,13 @@ def p_17_a(data):
     flow(P(500, 0))
     sys.setrecursionlimit(old_rec_limit)
 
-    # for y in range(14):
-    #     for x in range(494, 508):
-    #         p = P(x, y)
-    #         if p not in squares:
-    #             print('.', end='')
-    #         elif squares[p] == Matter.clay:
-    #             print('#', end='')
-    #         else:
-    #             print('~', end='')
-    #     print()
-
-    def get_p(p):
-        if p not in squares:
-            return 0
-        if squares[p] == Matter.clay:
-            return 100
-        return 202
-
-    min_x, max_x = min(a.x for a in squares), max(a.x for a in squares)
-    width, height = max_x - min_x + 1, max_y + 1
-    out = [0] * width * height
-    for p, m in squares.items():
-        out[p.y*width + p.x-min_x] = get_p(p)
-
-    from PIL import Image
-    new_img = Image.new("L", (width, height), "white")
-    new_img.putdata(out)
-    new_img.save('out.png')
-
-    return sum(1 for p, m in squares.items()
-               if m == Matter.watter and p.y >= min_y)
+    save_image()
+    answer_1 = sum(1 for p, m in squares.items()
+               if m in (Matter.water, Matter.running_water) and p.y >= min_y)
+    answer_2 = sum(1 for p, m in squares.items()
+               if m == Matter.water and p.y >= min_y)
+    return answer_1, answer_2
 
 
-FUN = p_17_a
+FUN = p_17
 print(run(FUN, FILENAME_TEMPLATE))
