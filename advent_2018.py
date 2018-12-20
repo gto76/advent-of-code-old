@@ -1023,11 +1023,169 @@ def p_17(data):
 
     save_image()
     answer_1 = sum(1 for p, m in squares.items()
-               if m in (Matter.water, Matter.running_water) and p.y >= min_y)
+                   if
+                   m in (Matter.water, Matter.running_water) and p.y >= min_y)
     answer_2 = sum(1 for p, m in squares.items()
-               if m == Matter.water and p.y >= min_y)
+                   if m == Matter.water and p.y >= min_y)
     return answer_1, answer_2
 
 
-FUN = p_17
+def p_18_a(data):
+    Acre = Enum('Acre', {'open': '.', 'trees': '|', 'lumberyard': '#'})
+
+    def get_adjacents(p):
+        out = [move(p, d) for d in list(D)]
+        return [acres[p] for p in out if p in acres]
+
+    def parse():
+        out = {}
+        for y, line in enumerate(data):
+            for x, ch in enumerate(line):
+                out[P(x, y)] = Acre(ch)
+        return out
+
+    def get_new_acre(p, acre):
+        adjacents = get_adjacents(p)
+        if p == P(6, 2):
+            print(adjacents)
+        trees = get_no(adjacents, Acre.trees)
+        lumberyards = get_no(adjacents, Acre.lumberyard)
+        if p == P(6, 2):
+            print(trees, lumberyards, (a.value for a in adjacents))
+        if acre == Acre.open:
+            if trees >= 3:
+                return Acre.trees
+            return Acre.open
+        elif acre == Acre.trees:
+            if lumberyards >= 3:
+                return Acre.lumberyard
+            return Acre.trees
+        elif acre == Acre.lumberyard:
+            if lumberyards >= 1 and trees >= 1:
+                return Acre.lumberyard
+            return Acre.open
+
+    def get_no(list_, acre):
+        return len([a for a in list_ if a == acre])
+
+    def print_out():
+        MAX = 10
+        for y in range(MAX):
+            for x in range(MAX):
+                print(acres[P(x, y)].value, end='')
+            print()
+        print()
+
+    acres = parse()
+    acres_new = {}
+    for _ in range(10):
+        print_out()
+        for p, acre in acres.items():
+            acres_new[p] = get_new_acre(p, acre)
+        print_out()
+        acres = acres_new
+
+    print_out()
+
+
+def p_20_a(data):
+    dir_ = get_dict('NESW', D)
+    Barrier = Enum('Barrier', {'room': '.', 'wall': '#', 'door': '|'})
+
+    def top(str_):
+        out = []
+        while True:
+            path, str_ = get_news(str_)
+            if out:
+                out = [a + path for a in out]
+            else:
+                out.append(path)
+            if not str_:
+                return out
+            paths, str_ = get_brackets(str_)
+            out = [a + path for a in out for path in paths]
+            if not str_:
+                return out
+
+    def get_news(str_):
+        match_ = re.match(r'[NESW]*', str_)
+        path = [dir_[ch] for ch in match_.group()]
+        str_ = str_[match_.end():]
+        return path, str_
+
+    def get_brackets(str_):
+        depth = 0
+        left = []
+        right = []
+        curr = left
+        for i, ch in enumerate(str_):
+            if ch == '(':
+                depth += 1
+                if depth == 1:
+                    continue
+            elif ch == ')':
+                depth -= 1
+            if depth == 0:
+                return (top(''.join(left)) + top(''.join(right))), str_[i + 1:]
+            if depth == 1 and ch == '|':
+                curr = right
+                continue
+            curr.append(ch)
+
+    def get_map(paths):
+        out = {P(0, 0): Barrier.room}
+        for path in paths:
+            out.update(analize_path(path))
+        return out
+
+    def analize_path(path):
+        out = {}
+        p = P(0, 0)
+        for d in path:
+            p = move(p, d)
+            out[p] = Barrier.door
+            p = move(p, d)
+            out[p] = Barrier.room
+        return out
+
+    def get_furthest_path():
+        flood_counter = {p: inf for p, bar in map_.items() if
+                         bar == Barrier.room}
+        flood(P(0, 0), 1, flood_counter)
+        return max(flood_counter.values())
+
+    def flood(p, i, flood_counter):
+        rooms = get_next_rooms(p)
+        for room in rooms:
+            if flood_counter[room] > i:
+                flood_counter[room] = i
+                flood(room, i + 1, flood_counter)
+
+    def get_next_rooms(p):
+        out = []
+        for d in list(D):
+            next_p = move(p, d)
+            if next_p in map_ and map_[next_p] == Barrier.door:
+                out.append(move(next_p, d))
+        return out
+
+    def print_out():
+        for y in range(min(a.y for a in map_.keys()),
+                       max(a.y for a in map_.keys()) + 1):
+            for x in range(min(a.x for a in map_.keys()),
+                           max(a.x for a in map_.keys()) + 1):
+                if P(x, y) not in map_:
+                    print(' ', end='')
+                    continue
+                print(map_[P(x, y)].value, end='')
+            print()
+
+    data = data[0][1:-1]
+    paths = top(data)
+    map_ = get_map(paths)
+    furthest_path = get_furthest_path()
+    print(furthest_path)
+
+
+FUN = p_20_a
 print(run(FUN, FILENAME_TEMPLATE))

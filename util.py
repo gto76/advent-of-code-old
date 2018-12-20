@@ -9,17 +9,24 @@ P = namedtuple('P', 'x y')
 # Direction Enum
 D = Enum('D', 'n e s w')
 
+# Double Direction Enum
+DD = Enum('DD', 'n ne e se s sw w nw')
+
 # Rotation Enum
 R = Enum('R', 'l s r')
 
 # Move dict
-MOVE_MAT = {D.n: P(0, 1), D.e: P(1, 0), D.s: P(0, -1), D.w: P(-1, 0)}
+MOVE_MAT = {D.n: P(0, 1), D.e: P(1, 0), D.s: P(0, -1), D.w: P(-1, 0),
+            DD.n: P(0, 1), DD.e: P(1, 0), DD.s: P(0, -1), DD.w: P(-1, 0),
+            DD.ne: P(1, 1), DD.se: P(1, -1), DD.sw: P(-1, -1), DD.nw: P(-1, 1)}
 
 def move_mat(position, direction):
-    return P(*[sum(a) for a in zip(position, MOVE[direction])])
+    return P(*[sum(a) for a in zip(position, MOVE_MAT[direction])])
 
 # Move dict
-MOVE = {D.n: P(0, -1), D.e: P(1, 0), D.s: P(0, 1), D.w: P(-1, 0)}
+MOVE = {D.n: P(0, -1), D.e: P(1, 0), D.s: P(0, 1), D.w: P(-1, 0),
+        DD.n: P(0, -1), DD.e: P(1, 0), DD.s: P(0, 1), DD.w: P(-1, 0),
+        DD.ne: P(1, -1), DD.se: P(1, 1), DD.sw: P(-1, 1), DD.nw: P(-1, -1)}
 
 def move(position, direction):
     return P(*[sum(a) for a in zip(position, MOVE[direction])])
@@ -27,13 +34,13 @@ def move(position, direction):
 def above(position):
     return move(position, D.n)
 
-def right(position):
+def on_right(position):
     return move(position, D.e)
-    
+
 def below(position):
     return move(position, D.s)
 
-def left(position):
+def on_left(position):
     return move(position, D.w)
 
 # Rotate dict
