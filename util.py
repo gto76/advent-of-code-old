@@ -1,4 +1,5 @@
 from collections import namedtuple, defaultdict
+from copy import deepcopy
 from enum import Enum
 from inspect import signature
 import sys
@@ -57,6 +58,15 @@ def get_dict(list_a, list_b):
 
 def bit_not(n, numbits=8):
     return (1 << numbits) - 1 - n
+
+def init_matrix(x, y, default):
+    out = []
+    for _ in range(y):
+        line = []
+        for _ in range(x):
+            line.append(deepcopy(default))
+        out.append(line)
+    return out
 
 class Bar:
     @staticmethod

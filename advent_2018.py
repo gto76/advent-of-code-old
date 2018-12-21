@@ -690,6 +690,37 @@ def p_13_a(data):
                 return f'{collision_p.x},{collision_p.y}'
 
 
+def p_11_a():
+    def get_matrix():
+        points = (P(x, y) for y in range(1, size + 1)
+                  for x in range(1, size + 1))
+        return {p: get_point_power(p) for p in points}
+
+    def get_point_power(p):
+        rack_id = p.x + 10
+        out = rack_id * p.y
+        out += serial
+        out *= rack_id
+        out = 0 if out < 100 else (out // 100) % 10
+        return out - 5
+
+    def get_p_max():
+        points = (P(x, y) for y in range(1, size - 1)
+                  for x in range(1, size - 1))
+        return max((get_square_power(p), p) for p in points)[1]
+
+    def get_square_power(p):
+        center = move(p, DD.se)
+        squares = [move(center, dd) for dd in list(DD)] + [center]
+        return sum(matrix_[p] for p in squares)
+
+    serial = 7857
+    size = 300
+    matrix_ = get_matrix()
+    out = get_p_max()
+    return f'{out.x},{out.y}'
+
+
 def p_13_b():
     # class Cart:
     #     def __init__(self, p, d):
@@ -985,7 +1016,7 @@ def p_17(data):
             if pos_n in squares and squares[pos_n] == Matter.clay:
                 return pos, False
             elif below(pos_n) not in squares \
-                    or squares[below(pos_n)] == Matter.running_water:
+                or squares[below(pos_n)] == Matter.running_water:
                 return pos_n, True
             pos = pos_n
 
@@ -1093,6 +1124,7 @@ def p_20_a(data):
     Barrier = Enum('Barrier', {'room': '.', 'wall': '#', 'door': '|'})
 
     def top(str_):
+        # Too many, needs to populate in real time.
         out = []
         while True:
             path, str_ = get_news(str_)
@@ -1126,7 +1158,7 @@ def p_20_a(data):
             elif ch == ')':
                 depth -= 1
             if depth == 0:
-                return (top(''.join(left)) + top(''.join(right))), str_[i + 1:]
+                return (top(''.join(left)), top(''.join(right))), str_[i + 1:]
             if depth == 1 and ch == '|':
                 curr = right
                 continue
@@ -1187,5 +1219,9 @@ def p_20_a(data):
     print(furthest_path)
 
 
-FUN = p_20_a
+def p_21_a(data):
+    pass
+
+
+FUN = p_11_a
 print(run(FUN, FILENAME_TEMPLATE))
