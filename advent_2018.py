@@ -711,7 +711,7 @@ def p_11_a():
 
     def get_square_power(p):
         center = move(p, DD.se)
-        squares = [move(center, dd) for dd in list(DD)] + [center]
+        squares = move_all(center, DD) + [center]
         return sum(matrix_[p] for p in squares)
 
     serial = 7857
@@ -719,6 +719,58 @@ def p_11_a():
     matrix_ = get_matrix()
     out = get_p_max()
     return f'{out.x},{out.y}'
+
+
+def p_12_a(data):
+    def update_state(state):
+        out = defaultdict(lambda: '.')
+        for center in get_range(state):
+            x_range = range(center-2, center+3)
+            str_ = ''.join(state[x] for x in x_range)
+            out[center] = rules.get(str_, '.')
+        return out
+
+    def get_range(state):
+        xes = [x for x, ch in state.items() if ch == '#']
+        return range(min(xes)-2, max(xes)+3)
+
+    def print_out(state):
+        print(''.join(ch for x, ch in sorted(state.items())))
+
+    state = defaultdict(lambda: '.')
+    state.update({x: ch for x, ch in enumerate(data[0][15:])})
+    rules = {line[:5]: line[-1] for line in data[2:]}
+    print_out(state)
+    for _ in range(20):
+        state = update_state(state)
+    print_out(state)
+    return sum(x for x, ch in state.items() if ch == '#')
+
+
+def p_12_b(data):
+    def update_state(state):
+        out = defaultdict(lambda: '.')
+        for center in get_range(state):
+            x_range = range(center-2, center+3)
+            str_ = ''.join(state[x] for x in x_range)
+            out[center] = rules.get(str_, '.')
+        return out
+
+    def get_range(state):
+        xes = [x for x, ch in state.items() if ch == '#']
+        return range(min(xes)-2, max(xes)+3)
+
+    def print_out(state):
+        print(''.join(ch for x, ch in sorted(state.items())))
+
+    state = defaultdict(lambda: '.')
+    state.update({x: ch for x, ch in enumerate(data[0][15:])})
+    rules = {line[:5]: line[-1] for line in data[2:]}
+    print_out(state)
+    for _ in range(20):
+        state = update_state(state)
+    print_out(state)
+    return sum(x for x, ch in state.items() if ch == '#')
 
 
 def p_13_b():
@@ -1223,5 +1275,5 @@ def p_21_a(data):
     pass
 
 
-FUN = p_11_a
+FUN = p_12_a
 print(run(FUN, FILENAME_TEMPLATE))

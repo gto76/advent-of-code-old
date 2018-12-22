@@ -24,6 +24,9 @@ MOVE_MAT = {D.n: P(0, 1), D.e: P(1, 0), D.s: P(0, -1), D.w: P(-1, 0),
 def move_mat(position, direction):
     return P(*[sum(a) for a in zip(position, MOVE_MAT[direction])])
 
+def move_mat_all(position, directions):
+    return [move_mat(position, dir_) for dir_ in directions]
+
 # Move dict
 MOVE = {D.n: P(0, -1), D.e: P(1, 0), D.s: P(0, 1), D.w: P(-1, 0),
         DD.n: P(0, -1), DD.e: P(1, 0), DD.s: P(0, 1), DD.w: P(-1, 0),
@@ -31,6 +34,9 @@ MOVE = {D.n: P(0, -1), D.e: P(1, 0), D.s: P(0, 1), D.w: P(-1, 0),
 
 def move(position, direction):
     return P(*[sum(a) for a in zip(position, MOVE[direction])])
+
+def move_all(position, directions):
+    return [move(position, dir_) for dir_ in directions]
 
 def above(position):
     return move(position, D.n)
