@@ -1069,7 +1069,7 @@ def p_17(data):
             if pos_n in squares and squares[pos_n] == Matter.clay:
                 return pos, False
             elif below(pos_n) not in squares \
-                    or squares[below(pos_n)] == Matter.running_water:
+                or squares[below(pos_n)] == Matter.running_water:
                 return pos_n, True
             pos = pos_n
 
@@ -1293,7 +1293,6 @@ def p_23_a(data):
 
 
 def p_23_b(data):
-    # (974, PP(x=15732653, y=37370828, z=40027284), 93130765)
     class Bot:
         def __init__(self, p, r):
             self.p = p
@@ -1305,7 +1304,7 @@ def p_23_b(data):
             if p is None:
                 self.p = PP(
                     *[randint(min_, max_) for min_, max_ in zip(p_min, p_max)])
-            self.score = no_in_range_b(self.p)
+            self.score = bots_in_range(self.p)
             self.distance = sum(abs(a) for a in self.p)
 
         def __str__(self):
@@ -1313,58 +1312,46 @@ def p_23_b(data):
             return f'Score: {self.score}, P: {self.p}, Distance: ' \
                    f'{self.distance:,}'
 
+    def bots_in_range(p):
+        return sum(1 for bot in bots if get_manhattan(p, bot.p) <= bot.r)
+
     def get_bot(line):
         p_str = re.search(r'<(.*)>', line).group(1)
         p = PP(*[int(a) for a in p_str.split(',')])
         r_str = re.search(r'r=(.*)', line).group(1)
         return Bot(p, int(r_str))
 
-    def no_in_range(bot_in):
-        return sum(
-            1 for bot in bots if get_manhattan(bot_in.p, bot.p) <= bot_in.r)
-
-    def no_in_range_b(p):
-        return sum(
-            1 for bot in bots if get_manhattan(p, bot.p) <= bot.r)
-
     def get_extremes(bots):
         p_min = PP(*[min(a.p[id_] for a in bots) for id_ in range(3)])
         p_max = PP(*[max(a.p[id_] for a in bots) for id_ in range(3)])
         return p_min, p_max
 
-    def scorer(a):
-        return a.score, -a.distance
-
-    def move_solutions(solutions):
+    def mutate(solutions):
         min_ = solutions[0].score
         out = list(solutions)
         for sol in solutions:
-            new_s = get_neighbours(sol, min_) if energy > 10000 \
-                else get_neighbours_2(sol, min_)
-            out.extend(a for a in new_s if a.p not in (b.p for b in solutions))
-        out = sorted(out, key=scorer)
+            neighbours = get_neighbours_a(sol, min_) if energy > 10000 \
+                else get_neighbours_b(sol, min_)
+            out.extend(
+                a for a in neighbours if a.p not in (b.p for b in solutions))
+        out = sorted(out, key=get_score)
         return out[-population:]
 
-    def get_neighbours(sol, min_):
+    def get_score(sol):
+        return sol.score, -sol.distance
+
+    def get_neighbours_a(sol, min_):
         ppp = (PP(*[int(b * random() * distance) for b in a]) for a in
                product([1, -1], repeat=3))
         out = (Solution(PP(*[sum(a) for a in zip(sol.p, p)])) for p in ppp)
         return [a for a in out if a.score >= min_]
 
-    def get_neighbours_2(sol, min_):
+    def get_neighbours_b(sol, min_):
         ppp = (PP(*[int(b * distance) for b in a]) for a in
                ((-1, -1, 0), (-1, 0, -1), (0, -1, -1), (-1, 0, 0), (0, -1, 0),
                 (0, 0, -1)))
         out = (Solution(PP(*[sum(a) for a in zip(sol.p, p)])) for p in ppp)
         return [a for a in out if a.score >= min_]
-
-    def get_p(p, distance, coord_id):
-        out = list(p)
-        out[coord_id] += int(random() * distance)
-        return PP(*out)
-
-    def get_winner(solutions):
-        return max(solutions, key=scorer)
 
     def save_image(center, size):
         x_range = range(center.x - size, center.x + size)
@@ -1375,22 +1362,21 @@ def p_23_b(data):
         out = [int((a - min_) / (max_ + 1 - min_) * 255) for a in out]
         img = Image.new("L", (
             x_range.stop - x_range.start, z_range.stop - z_range.start),
-                            "white")
+                        "white")
         img.putdata(out)
         img.save('p_21.png')
 
+    population, cooling_factor = 20, 0.8
     bots = [get_bot(line) for line in data]
-    population, cooling_factor = 50, 0.8
-    # population, cooling_factor = 50, 0.5
     p_min, p_max = get_extremes(bots)
-    energy = max(max_ - min_ for min_, max_ in zip(p_min, p_max)) / 3
+    energy = max(max_ - min_ for min_, max_ in zip(p_min, p_max)) / 10
     distance = int(energy)
-    solutions = [Solution() for _ in range(population)]
+    solutions = sorted([Solution() for _ in range(population)], key=get_score)
     while energy > 1:
         avg_score = sum(a.score for a in solutions) / len(solutions)
-        print(f'Energy: {energy:>12,.0f}:', get_winner(solutions),
+        print(f'Energy: {energy:>11,.0f}', solutions[-1],
               f'AvgScore: {avg_score:.1f}', sep=', ')
-        solutions = move_solutions(solutions)
+        solutions = mutate(solutions)
         energy *= cooling_factor
         distance = int(energy)
     winner = solutions[-1]
