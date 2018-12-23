@@ -8,6 +8,8 @@ from itertools import *
 import json
 from math import *
 import operator as op
+from PIL import Image
+from random import gauss, random, randint
 import re
 import sys
 from time import sleep
@@ -278,13 +280,10 @@ def p_6_a(data):
         yyy = [a.y for a in coords]
         return P(min(xxx), min(yyy)), P(max(xxx), max(yyy))
 
-    def get_man(p1, p2):
-        return abs(p1.x - p2.x) + abs(p1.y - p2.y)
-
     def get_in_of_closest(p):
         out = []
         for a in coords:
-            out.append(get_man(p, a))
+            out.append(get_manhattan(p, a))
         return out.index(min(out))
 
     coords = []
@@ -310,11 +309,8 @@ def p_6_b(data):
         y = [a.y for a in coords]
         return P(min(x), min(y)), P(max(x), max(y))
 
-    def get_man(p1, p2):
-        return abs(p1.x - p2.x) + abs(p1.y - p2.y)
-
     def get_sum_of_distances(p):
-        return sum(get_man(p, a) for a in coords)
+        return sum(get_manhattan(p, a) for a in coords)
 
     coords = []
     for line in data:
@@ -725,47 +721,52 @@ def p_12_a(data):
     def update_state(state):
         out = defaultdict(lambda: '.')
         for center in get_range(state):
-            x_range = range(center-2, center+3)
+            x_range = range(center - 2, center + 3)
             str_ = ''.join(state[x] for x in x_range)
             out[center] = rules.get(str_, '.')
         return out
 
     def get_range(state):
         xes = [x for x, ch in state.items() if ch == '#']
-        return range(min(xes)-2, max(xes)+3)
+        return range(min(xes) - 2, max(xes) + 3)
 
     def print_out(state):
         print(''.join(ch for x, ch in sorted(state.items())))
 
-    state = defaultdict(lambda: '.')
-    state.update({x: ch for x, ch in enumerate(data[0][15:])})
+    state = {x: ch for x, ch in enumerate(data[0][15:])}
+    state = defaultdict(lambda: '.', state)
     rules = {line[:5]: line[-1] for line in data[2:]}
-    print_out(state)
     for _ in range(20):
         state = update_state(state)
-    print_out(state)
     return sum(x for x, ch in state.items() if ch == '#')
 
 
 def p_12_b(data):
+    def get_expanded_rules(rules):
+        width = 6
+        out = {}
+        for option in [list(a) for a in product('.#', repeat=6)]:
+            option = list(option)
+
     def update_state(state):
         out = defaultdict(lambda: '.')
         for center in get_range(state):
-            x_range = range(center-2, center+3)
+            x_range = range(center - 2, center + 3)
             str_ = ''.join(state[x] for x in x_range)
             out[center] = rules.get(str_, '.')
         return out
 
     def get_range(state):
         xes = [x for x, ch in state.items() if ch == '#']
-        return range(min(xes)-2, max(xes)+3)
+        return range(min(xes) - 2, max(xes) + 3)
 
     def print_out(state):
         print(''.join(ch for x, ch in sorted(state.items())))
 
-    state = defaultdict(lambda: '.')
-    state.update({x: ch for x, ch in enumerate(data[0][15:])})
+    state = {x: ch for x, ch in enumerate(data[0][15:])}
+    state = defaultdict(lambda: '.', state)
     rules = {line[:5]: line[-1] for line in data[2:]}
+    expanded_rules = get_expanded_rules(rules)
     print_out(state)
     for _ in range(20):
         state = update_state(state)
@@ -1068,7 +1069,7 @@ def p_17(data):
             if pos_n in squares and squares[pos_n] == Matter.clay:
                 return pos, False
             elif below(pos_n) not in squares \
-                or squares[below(pos_n)] == Matter.running_water:
+                    or squares[below(pos_n)] == Matter.running_water:
                 return pos_n, True
             pos = pos_n
 
@@ -1091,7 +1092,6 @@ def p_17(data):
         out = [0] * width * height
         for p, m in squares.items():
             out[p.y * width + p.x - min_x] = get_p(p)
-        from PIL import Image
         new_img = Image.new("L", (width, height), "white")
         new_img.putdata(out)
         new_img.save('p_17.png')
@@ -1271,9 +1271,132 @@ def p_20_a(data):
     print(furthest_path)
 
 
-def p_21_a(data):
-    pass
+def p_23_a(data):
+    class Bot:
+        def __init__(self, p, r):
+            self.p = p
+            self.r = r
+
+    def get_bot(line):
+        p_str = re.search(r'<(.*)>', line).group(1)
+        p = PP(*[int(a) for a in p_str.split(',')])
+        r_str = re.search(r'r=(.*)', line).group(1)
+        return Bot(p, int(r_str))
+
+    def no_in_range(bot_in):
+        return sum(
+            1 for bot in bots if get_manhattan(bot_in.p, bot.p) <= bot_in.r)
+
+    bots = {get_bot(line) for line in data}
+    strongest = max(bots, key=lambda a: a.r)
+    return no_in_range(strongest)
 
 
-FUN = p_12_a
+def p_23_b(data):
+    # (974, PP(x=15732653, y=37370828, z=40027284), 93130765)
+    class Bot:
+        def __init__(self, p, r):
+            self.p = p
+            self.r = r
+
+    class Solution:
+        def __init__(self, p=None):
+            self.p = p
+            if p is None:
+                self.p = PP(
+                    *[randint(min_, max_) for min_, max_ in zip(p_min, p_max)])
+            self.score = no_in_range_b(self.p)
+            self.distance = sum(abs(a) for a in self.p)
+
+        def __str__(self):
+            p_str = f'{[a for a in self.p]}'
+            return f'Score: {self.score}, P: {self.p}, Distance: ' \
+                   f'{self.distance:,}'
+
+    def get_bot(line):
+        p_str = re.search(r'<(.*)>', line).group(1)
+        p = PP(*[int(a) for a in p_str.split(',')])
+        r_str = re.search(r'r=(.*)', line).group(1)
+        return Bot(p, int(r_str))
+
+    def no_in_range(bot_in):
+        return sum(
+            1 for bot in bots if get_manhattan(bot_in.p, bot.p) <= bot_in.r)
+
+    def no_in_range_b(p):
+        return sum(
+            1 for bot in bots if get_manhattan(p, bot.p) <= bot.r)
+
+    def get_extremes(bots):
+        p_min = PP(*[min(a.p[id_] for a in bots) for id_ in range(3)])
+        p_max = PP(*[max(a.p[id_] for a in bots) for id_ in range(3)])
+        return p_min, p_max
+
+    def scorer(a):
+        return a.score, -a.distance
+
+    def move_solutions(solutions):
+        min_ = solutions[0].score
+        out = list(solutions)
+        for sol in solutions:
+            new_s = get_neighbours(sol, min_) if energy > 10000 \
+                else get_neighbours_2(sol, min_)
+            out.extend(a for a in new_s if a.p not in (b.p for b in solutions))
+        out = sorted(out, key=scorer)
+        return out[-population:]
+
+    def get_neighbours(sol, min_):
+        ppp = (PP(*[int(b * random() * distance) for b in a]) for a in
+               product([1, -1], repeat=3))
+        out = (Solution(PP(*[sum(a) for a in zip(sol.p, p)])) for p in ppp)
+        return [a for a in out if a.score >= min_]
+
+    def get_neighbours_2(sol, min_):
+        ppp = (PP(*[int(b * distance) for b in a]) for a in
+               ((-1, -1, 0), (-1, 0, -1), (0, -1, -1), (-1, 0, 0), (0, -1, 0),
+                (0, 0, -1)))
+        out = (Solution(PP(*[sum(a) for a in zip(sol.p, p)])) for p in ppp)
+        return [a for a in out if a.score >= min_]
+
+    def get_p(p, distance, coord_id):
+        out = list(p)
+        out[coord_id] += int(random() * distance)
+        return PP(*out)
+
+    def get_winner(solutions):
+        return max(solutions, key=scorer)
+
+    def save_image(center, size):
+        x_range = range(center.x - size, center.x + size)
+        z_range = range(center.z - size, center.z + size)
+        out = [Solution(PP(x, center.y, z)).score for z in z_range for x in
+               x_range]
+        min_, max_ = min(out), max(out)
+        out = [int((a - min_) / (max_ + 1 - min_) * 255) for a in out]
+        img = Image.new("L", (
+            x_range.stop - x_range.start, z_range.stop - z_range.start),
+                            "white")
+        img.putdata(out)
+        img.save('p_21.png')
+
+    bots = [get_bot(line) for line in data]
+    population, cooling_factor = 50, 0.8
+    # population, cooling_factor = 50, 0.5
+    p_min, p_max = get_extremes(bots)
+    energy = max(max_ - min_ for min_, max_ in zip(p_min, p_max)) / 3
+    distance = int(energy)
+    solutions = [Solution() for _ in range(population)]
+    while energy > 1:
+        avg_score = sum(a.score for a in solutions) / len(solutions)
+        print(f'Energy: {energy:>12,.0f}:', get_winner(solutions),
+              f'AvgScore: {avg_score:.1f}', sep=', ')
+        solutions = move_solutions(solutions)
+        energy *= cooling_factor
+        distance = int(energy)
+    winner = solutions[-1]
+    save_image(winner.p, 20)
+    return winner.distance
+
+
+FUN = p_23_b
 print(run(FUN, FILENAME_TEMPLATE))

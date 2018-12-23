@@ -7,6 +7,9 @@ import sys
 # Position Tuple
 P = namedtuple('P', 'x y')
 
+# 3D Position Tuple
+PP = namedtuple('PP', 'x y z')
+
 # Direction Enum
 D = Enum('D', 'n e s w')
 
@@ -15,6 +18,9 @@ DD = Enum('DD', 'n ne e se s sw w nw')
 
 # Rotation Enum
 R = Enum('R', 'l s r')
+
+def get_manhattan(p_1, p_2):
+    return sum(abs(a - b) for a, b in zip(p_1, p_2))
 
 # Move dict
 MOVE_MAT = {D.n: P(0, 1), D.e: P(1, 0), D.s: P(0, -1), D.w: P(-1, 0),
