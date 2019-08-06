@@ -1,8 +1,11 @@
+#!/usr/bin/env python3
+
 from collections import Counter, namedtuple, defaultdict
 from copy import copy, deepcopy
 from datetime import datetime
 from enum import Enum, auto
 from functools import reduce
+import numpy as np
 import hashlib
 from itertools import *
 import json
@@ -12,7 +15,8 @@ from PIL import Image
 from random import gauss, random, randint
 import re
 import sys
-from time import sleep
+from tqdm import tqdm
+from time import sleep, time
 
 from util import *
 
@@ -95,7 +99,7 @@ def p_3_a(data):
     for line in data:
         parse_line(line)
     out = 0
-    for v in Bar.foreach(cnt.values()):
+    for v in tqdm(cnt.values()):
         if v > 1:
             out += 1
     return out
@@ -127,10 +131,10 @@ def p_3_b(data):
     for line in data:
         parse_line(line)
     double_ids = set()
-    for k, v in Bar.foreach(cnt.items()):
+    for k, v in tqdm(cnt.items()):
         if len(v.ids) > 1:
             double_ids.update(v.ids)
-    return ids.difference(double_ids)
+    return ids - double_ids
 
 
 def p_4_a(data):
@@ -209,16 +213,15 @@ def p_5_a(data):
             if skip:
                 skip = False
                 continue
-            b = line[i]
-            if abs(ord(a) - ord(b)) == 32:
+            if abs(a - line[i]) == 32:
                 skip = True
                 continue
-            out.append(a)
+            out += [a]
         if not skip:
-            out.append(line[-1])
+            out += [line[-1]]
         return out
 
-    line = data[0]
+    line = [ord(a) for a in data[0]]
     out = process(line)
     old_out = out
     while True:
@@ -226,27 +229,10 @@ def p_5_a(data):
         if len(out) == len(old_out):
             break
         old_out = out
-    print(''.join(out))
     return len(out)
 
 
 def p_5_b(data):
-    def process(line):
-        out = []
-        skip = False
-        for i, a in enumerate(line[:-1], 1):
-            if skip:
-                skip = False
-                continue
-            b = line[i]
-            if abs(ord(a) - ord(b)) == 32:
-                skip = True
-                continue
-            out.append(a)
-        if not skip:
-            out.append(line[-1])
-        return out
-
     def get_len(line):
         out = process(line)
         old_out = out
@@ -257,72 +243,73 @@ def p_5_b(data):
             old_out = out
         return len(out)
 
+    def process(line):
+        out = []
+        skip = False
+        for i, a in enumerate(line[:-1], 1):
+            if skip:
+                skip = False
+                continue
+            if abs(a - line[i]) == 32:
+                skip = True
+                continue
+            out += [a]
+        if not skip:
+            out += [line[-1]]
+        return out
+
     line = data[0]
     min_ = inf
-    for i in range(65, 65 + 32):
-        print(chr(i))
+    for i in tqdm(range(65, 65 + 32)):
         line_b = line.replace(chr(i), '')
         line_b = line_b.replace(chr(i + 32), '')
-        len_ = get_len(line_b)
-        print(len_)
-        if len_ < min_:
-            min_ = len_
+        line_b = [ord(a) for a in line_b]
+        min_ = min(get_len(line_b), min_)
     return min_
 
 
 def p_6_a(data):
     def parse_line(line):
         y, x = line.split(', ')
-        coords.append(P(int(x), int(y)))
+        return P(int(x), int(y))
 
     def get_bounds():
         xxx = [a.x for a in coords]
         yyy = [a.y for a in coords]
         return P(min(xxx), min(yyy)), P(max(xxx), max(yyy))
 
-    def get_in_of_closest(p):
-        out = []
-        for a in coords:
-            out.append(get_manhattan(p, a))
-        return out.index(min(out))
-
-    coords = []
-    for line in data:
-        parse_line(line)
-    b_1, b_2 = get_bounds()
-    matrix = []
-    for y in Bar.range(b_1.y, b_2.y + 1):
-        for x in range(b_1.x, b_2.x + 1):
-            i = get_in_of_closest(P(x, y))
-            matrix.append(i)
-    c = Counter(matrix)
-    return str(c.most_common()[0][1])
+    coords = [parse_line(line) for line in data]
+    nw, se = get_bounds()
+    a = np.array([[p.y, p.x] for p in coords])
+    b = np.array([[[[y, x]] for x in range(nw.x, se.x + 1)]
+                  for y in range(nw.y, se.y + 1)])
+    c = b - a
+    d = abs(c)
+    e = d.sum(3)
+    f = e.argmin(2)
+    return Counter(f.flat).most_common()[0][1]
 
 
 def p_6_b(data):
     def parse_line(line):
         y, x = line.split(', ')
-        coords.append(P(int(x), int(y)))
+        return P(int(x), int(y))
 
     def get_bounds():
-        x = [a.x for a in coords]
-        y = [a.y for a in coords]
-        return P(min(x), min(y)), P(max(x), max(y))
+        xxx = [a.x for a in coords]
+        yyy = [a.y for a in coords]
+        return P(min(xxx), min(yyy)), P(max(xxx), max(yyy))
 
-    def get_sum_of_distances(p):
-        return sum(get_manhattan(p, a) for a in coords)
-
-    coords = []
-    for line in data:
-        parse_line(line)
-    b_1, b_2 = get_bounds()
-    out = 0
-    for y in Bar.range(b_1.y, b_2.y + 1):
-        for x in range(b_1.x, b_2.x + 1):
-            sum_ = get_sum_of_distances(P(x, y))
-            if sum_ < 10000:
-                out += 1
-    return out
+    coords = [parse_line(line) for line in data]
+    nw, se = get_bounds()
+    a = np.array([[p.y, p.x] for p in coords])
+    b = np.array([[[[y, x]] for x in range(nw.x, se.x + 1)]
+                  for y in range(nw.y, se.y + 1)])
+    c = b - a
+    d = abs(c)
+    e = d.sum(3)
+    f = e.sum(2)
+    return sum(1 for a in f.flat if a < 10000)
 
 
 def p_7_a(data):
@@ -559,9 +546,7 @@ def p_9_b():
     last = Marble(0)
     last.left = last
     last.right = last
-    bar = Bar(NO_MARBLES)
-    for i_m, i_p in zip(range(1, NO_MARBLES + 1), cycle(range(NO_PL))):
-        bar.tick()
+    for i_m, i_p in zip(tqdm(range(1, NO_MARBLES + 1)), cycle(range(NO_PL))):
         if i_m % 23 == 0:
             last = rearange(i_m, i_p, last)
             continue
@@ -576,10 +561,9 @@ def p_10(data):
             self.v = v
 
     def parse_line(a):
-        x, y, v_x, v_y = int(a[10:16]), int(a[18:24]), int(a[36:38]), \
-                         int(a[40:42])
-        point = Point(P(x, y), P(v_x, v_y))
-        points.append(point)
+        x, y = int(a[10:16]), int(a[18:24])
+        v_x, v_y = int(a[36:38]), int(a[40:42])
+        return Point(P(x, y), P(v_x, v_y))
 
     def move_point():
         for point in points:
@@ -593,13 +577,12 @@ def p_10(data):
                 return True
 
     def print_p(p_min, p_max):
-        for i in range(p_min.y, p_max.y):
-            for j in range(p_min.x, p_max.x):
-                if ocupied(P(j, i)):
-                    print('#', end='')
-                else:
-                    print('.', end='')
-            print()
+        out = []
+        for y in range(p_min.y, p_max.y):
+            for x in range(p_min.x, p_max.x):
+                out += ['#'] if ocupied(P(x, y)) else ['.']
+            out += ['\n']
+        return ''.join(out)
 
     def points_together(points):
         max_x = max(a.p.x for a in points)
@@ -609,81 +592,12 @@ def p_10(data):
         if max_x - min_x < 100 and max_y - min_y < 10:
             return P(min_x, min_y), P(max_x, max_y)
 
-    points = []
-    for line in data:
-        parse_line(line)
-    for i in count():
+    points = [parse_line(line) for line in data]
+    while True:
         move_point()
         if points_together(points):
-            print(i)
             p_min, p_max = points_together(points)
-            print_p(p_min, p_max)
-
-
-def p_13_a(data):
-    class Cart:
-        def __init__(self, p, d):
-            self.p = p
-            self.d = d
-            self.r = R.l
-
-        def __repr__(self):
-            return f'{self.__dict__}'
-
-    def get_carts():
-        out = []
-        for y, line in enumerate(data):
-            for x, ch in enumerate(line):
-                if ch in dd:
-                    p = P(x, y)
-                    d = dd[ch]
-                    cart = Cart(p, d)
-                    out.append(cart)
-        return out
-
-    def get_track():
-        out = []
-        cc = {'^': '|', 'v': '|', '>': '-', '<': '-'}
-        for line in data:
-            line_list = []
-            for ch in line:
-                if ch in dd:
-                    ch = cc[ch]
-                line_list.append(ch)
-            out.append(line_list)
-        return out
-
-    def move_cart(cart):
-        cart.d = get_dir(cart)
-        p = move(cart.p, cart.d)
-        if p in [a.p for a in carts]:
-            return p
-        cart.p = p
-
-    def get_dir(cart):
-        ch = track[cart.p.y][cart.p.x]
-        if ch in '|-':
-            return cart.d
-        if ch == '+':
-            out = turn(cart.d, cart.r)
-            cart.r = R.l if cart.r == R.r else R(cart.r.value + 1)
-            return out
-        if ch in '\/':
-            return tt[(ch, cart.d)]
-
-    dd = get_dict('^>v<', D)
-    tt = {('/', D.n): D.e, ('/', D.e): D.n, ('/', D.s): D.w, ('/', D.w): D.s,
-          ('\\', D.n): D.w, ('\\', D.e): D.s, ('\\', D.s): D.e,
-          ('\\', D.w): D.n}
-    carts = get_carts()
-    track = get_track()
-
-    while True:
-        carts = sorted(carts, key=lambda a: (a.p.y, a.p.x))
-        for cart in carts:
-            collision_p = move_cart(cart)
-            if collision_p:
-                return f'{collision_p.x},{collision_p.y}'
+            return print_p(p_min, p_max)
 
 
 def p_11_a():
@@ -767,76 +681,279 @@ def p_12_b(data):
     state = defaultdict(lambda: '.', state)
     rules = {line[:5]: line[-1] for line in data[2:]}
     expanded_rules = get_expanded_rules(rules)
-    print_out(state)
     for _ in range(20):
         state = update_state(state)
-    print_out(state)
     return sum(x for x, ch in state.items() if ch == '#')
 
 
-def p_13_b():
-    # class Cart:
-    #     def __init__(self, p, d):
-    #         self.p = p
-    #         self.d = d
-    #         self.r = R.l
-    #     def __repr__(self):
-    #         return f'{self.__dict__}'
-    #
-    # def get_carts():
-    #     out = []
-    #     for y, line in enumerate(data):
-    #         for x, ch in enumerate(line):
-    #             if ch in dd:
-    #                 p = P(x, y)
-    #                 d = dd[ch]
-    #                 cart = Cart(p, d)
-    #                 out.append(cart)
-    #     return out
-    #
-    # def get_track():
-    #     out = []
-    #     cc = {'^': '|', 'v': '|', '>': '-', '<': '-'}
-    #     for line in data:
-    #         line_list = []
-    #         for ch in line:
-    #             if ch in dd:
-    #                 ch = cc[ch]
-    #             line_list.append(ch)
-    #         out.append(line_list)
-    #     return out
-    #
-    # def move_cart(cart):
-    #     cart.d = get_dir(cart)
-    #     p = move(cart.p, cart.d)
-    #     if p in [a.p for a in carts]:
-    #         return p
-    #     cart.p = p
-    #
-    # def get_dir(cart):
-    #     ch = track[cart.p.y][cart.p.x]
-    #     if ch in '|-':
-    #         return cart.d
-    #     if ch == '+':
-    #         out = turn(cart.d, cart.r)
-    #         cart.r = R.l if cart.r == R.r else R(cart.r.value+1)
-    #         return out
-    #     if ch in '\/':
-    #         return tt[(ch, cart.d)]
-    #
-    # dd = get_dict('^>v<', D)
-    # tt = {('/', D.n): D.e, ('/', D.e): D.n, ('/', D.s): D.w, ('/', D.w): D.s,
-    #       ('\\', D.n): D.w, ('\\', D.e): D.s, ('\\', D.s): D.e,
-    #       ('\\', D.w): D.n}
-    # carts = get_carts()
-    # track = get_track()
-    #
-    # while True:
-    #     if len(carts) == 1:
-    #         return f'{carts[0].p.x},{carts[0].p.y}'
-    #     carts = sorted(carts, key=lambda a: (a.p.y, a.p.x))
-    #     carts = [move_cart(a) for a in carts]
-    pass
+def p_13_a(data):
+    class Cart:
+        def __init__(self, p, d):
+            self.p = p
+            self.d = d
+            self.r = R.l
+
+        def __repr__(self):
+            return f'{self.__dict__}'
+
+    def get_carts():
+        out = []
+        for y, line in enumerate(data):
+            for x, ch in enumerate(line):
+                if ch in dd:
+                    p = P(x, y)
+                    d = dd[ch]
+                    cart = Cart(p, d)
+                    out.append(cart)
+        return out
+
+    def get_track():
+        out = []
+        cc = {'^': '|', 'v': '|', '>': '-', '<': '-'}
+        for line in data:
+            line_list = []
+            for ch in line:
+                if ch in dd:
+                    ch = cc[ch]
+                line_list.append(ch)
+            out.append(line_list)
+        return out
+
+    def move_cart(cart):
+        cart.d = get_dir(cart)
+        p = move(cart.p, cart.d)
+        if p in [a.p for a in carts]:
+            return p
+        cart.p = p
+
+    def get_dir(cart):
+        ch = track[cart.p.y][cart.p.x]
+        if ch in '|-':
+            return cart.d
+        if ch == '+':
+            out = turn(cart.d, cart.r)
+            cart.r = R.l if cart.r == R.r else R(cart.r.value + 1)
+            return out
+        if ch in '\/':
+            return tt[(ch, cart.d)]
+
+    dd = get_dict('^>v<', D)
+    tt = {('/', D.n): D.e, ('/', D.e): D.n, ('/', D.s): D.w, ('/', D.w): D.s,
+          ('\\', D.n): D.w, ('\\', D.e): D.s, ('\\', D.s): D.e,
+          ('\\', D.w): D.n}
+    carts = get_carts()
+    track = get_track()
+
+    while True:
+        carts = sorted(carts, key=lambda a: (a.p.y, a.p.x))
+        for cart in carts:
+            collision_p = move_cart(cart)
+            if collision_p:
+                return f'{collision_p.x},{collision_p.y}'
+
+
+# def p_13_b():
+#     # class Cart:
+#     #     def __init__(self, p, d):
+#     #         self.p = p
+#     #         self.d = d
+#     #         self.r = R.l
+#     #     def __repr__(self):
+#     #         return f'{self.__dict__}'
+#     #
+#     # def get_carts():
+#     #     out = []
+#     #     for y, line in enumerate(data):
+#     #         for x, ch in enumerate(line):
+#     #             if ch in dd:
+#     #                 p = P(x, y)
+#     #                 d = dd[ch]
+#     #                 cart = Cart(p, d)
+#     #                 out.append(cart)
+#     #     return out
+#     #
+#     # def get_track():
+#     #     out = []
+#     #     cc = {'^': '|', 'v': '|', '>': '-', '<': '-'}
+#     #     for line in data:
+#     #         line_list = []
+#     #         for ch in line:
+#     #             if ch in dd:
+#     #                 ch = cc[ch]
+#     #             line_list.append(ch)
+#     #         out.append(line_list)
+#     #     return out
+#     #
+#     # def move_cart(cart):
+#     #     cart.d = get_dir(cart)
+#     #     p = move(cart.p, cart.d)
+#     #     if p in [a.p for a in carts]:
+#     #         return p
+#     #     cart.p = p
+#     #
+#     # def get_dir(cart):
+#     #     ch = track[cart.p.y][cart.p.x]
+#     #     if ch in '|-':
+#     #         return cart.d
+#     #     if ch == '+':
+#     #         out = turn(cart.d, cart.r)
+#     #         cart.r = R.l if cart.r == R.r else R(cart.r.value+1)
+#     #         return out
+#     #     if ch in '\/':
+#     #         return tt[(ch, cart.d)]
+#     #
+#     # dd = get_dict('^>v<', D)
+#     # tt = {('/', D.n): D.e, ('/', D.e): D.n, ('/', D.s): D.w, ('/', D.w): D.s,
+#     #       ('\\', D.n): D.w, ('\\', D.e): D.s, ('\\', D.s): D.e,
+#     #       ('\\', D.w): D.n}
+#     # carts = get_carts()
+#     # track = get_track()
+#     #
+#     # while True:
+#     #     if len(carts) == 1:
+#     #         return f'{carts[0].p.x},{carts[0].p.y}'
+#     #     carts = sorted(carts, key=lambda a: (a.p.y, a.p.x))
+#     #     carts = [move_cart(a) for a in carts]
+#     pass
+
+
+def p_14_a():
+    IN = 793061
+    def get_recepies(l, r):
+        a_sum = l + r
+        return [int(a) for a in str(a_sum)]
+
+    def get_new_i(i, recepies):
+        moves = 1 + recepies[i]
+        return (i + moves) % len(recepies) 
+
+    recepies = [3, 7]
+    elf_1 = 0
+    elf_2 = 1
+    while len(recepies) < IN + 10:
+        new_recepies = get_recepies(recepies[elf_1], recepies[elf_2])
+        recepies.extend(new_recepies)
+        elf_1 = get_new_i(elf_1, recepies)
+        elf_2 = get_new_i(elf_2, recepies)
+    out = recepies[IN:IN+10]
+    return ''.join(str(a) for a in out)
+
+
+def p_14_b():
+    IN = 793061
+    def get_recepies(l, r):
+        a_sum = l + r
+        return [int(a) for a in str(a_sum)]
+
+    def get_new_i(i, recepies):
+        moves = 1 + recepies[i]
+        return (i + moves) % len(recepies) 
+
+    def append_recepies(recepies, new_recepies, in_list):
+        for new_recepie in new_recepies:
+            recepies.append(new_recepie)
+            if len(recepies) < len(in_list):
+                continue
+            if recepies[-len(in_list):] == in_list:
+                return True
+
+    in_list = [int(a) for a in str(IN)]
+    recepies = [3, 7]
+    elf_1 = 0
+    elf_2 = 1
+    while True:
+        new_recepies = get_recepies(recepies[elf_1], recepies[elf_2])
+        if append_recepies(recepies, new_recepies, in_list):
+            break
+        elf_1 = get_new_i(elf_1, recepies)
+        elf_2 = get_new_i(elf_2, recepies)
+    return len(recepies) - len(in_list)
+
+
+
+# def p_15_a(data):
+#     Terain = Enum('Terain', {'wall': '#', 'cavern': '.'})
+#     UnitType = Enum('UnitType', {'goblin': 'G', 'elf': 'E'})
+#
+#     class Unit:
+#         def __init__(self, type_, p):
+#             self.type_ = type_
+#             self.p = p
+#             self.attack = 3
+#             self.hit_points = 200
+#
+#     def parse():
+#         world, units = {}, []
+#         for y, line in enumerate(data):
+#             for x, ch in enumerate(line):
+#                 p = P(x, y)
+#                 if ch == '#':
+#                     world[p] = Terain.wall
+#                     continue
+#                 world[p] = Terain.cavern
+#                 if ch == '.':
+#                     continue
+#                 units.append(Unit(UnitType(ch), p))
+#         return world, units
+#
+#     def print_out():
+#         for y in range(max(p.y for p in world.keys())+1):
+#             for x in range(max(p.x for p in world.keys())+1):
+#                 p = P(x, y)
+#                 uuu = [u for u in units if u.p == p]
+#                 ch = uuu[0].type_.value if uuu else world[p].value
+#                 print(ch, end='')
+#             print()
+#
+#     def reading_order(p):
+#         return p.y, p.x
+#
+#     def reading_order_unit(a):
+#         return a.p.y, a.p.x
+#
+#     def take_turn(unit):
+#         targets = {u for u in units if u.type_ != unit.type_}
+#         in_range = {p for t in targets for p in move_all(t.p, D)}
+#         in_range = {p for p in in_range if world[p] == Terain.cavern}
+#         if unit.p in in_range:
+#             attack()
+#         in_range = {p for p in in_range if p not in [u.p for u in units]}
+#         next_p = get_next_p(unit.p, in_range)
+#         if not next_p:
+#             return
+#         unit.p = next_p
+#
+#
+#     def attack():
+#         pass
+#
+#     def get_next_p(p_in, in_range):
+#         caverns = {t.p for t in world.items() if t == Terain.cavern}
+#         empty_squares = caverns.difference(u.p for u in units)
+#         counter = {p: None for p in empty_squares}
+#         counter[p_in] = 0
+#         i = 0
+#         while True:
+#             curr_ps = {p for p, d in counter.items() if d and d == i}
+#             next_ps = {p_n for p_c in curr_ps for p_n in move_all(p_c, D)}
+#             next_ps = next_ps.intersection(empty_squares)
+#             if not next_ps:
+#                 return
+#             out = next_ps.union(in_range)
+#             if out:
+#                 return min([p for p, d in counter if d == 1], key=reading_order)
+#             i += 1
+#             counter.update({p: i for p in next_ps if counter[p] is None})
+#
+#
+#     world, units = parse()
+#     print_out()
+#
+#     while True:
+#         ordered_units = sorted(units, key=reading_order_unit)
+#         for unit in ordered_units:
+#             take_turn(unit)
+#             print_out()
 
 
 def p_16_a(data):
@@ -1089,6 +1206,7 @@ def p_17(data):
 
         min_x, max_x = min(a.x for a in squares), max(a.x for a in squares)
         width, height = max_x - min_x + 1, max_y + 1
+
         out = [0] * width * height
         for p, m in squares.items():
             out[p.y * width + p.x - min_x] = get_p(p)
@@ -1113,162 +1231,161 @@ def p_17(data):
     return answer_1, answer_2
 
 
-def p_18_a(data):
-    Acre = Enum('Acre', {'open': '.', 'trees': '|', 'lumberyard': '#'})
+# def p_18_a(data):
+#     Acre = Enum('Acre', {'open': '.', 'trees': '|', 'lumberyard': '#'})
+#
+#     def get_adjacents(p):
+#         out = [move(p, d) for d in list(D)]
+#         return [acres[p] for p in out if p in acres]
+#
+#     def parse():
+#         out = {}
+#         for y, line in enumerate(data):
+#             for x, ch in enumerate(line):
+#                 out[P(x, y)] = Acre(ch)
+#         return out
+#
+#     def get_new_acre(p, acre):
+#         adjacents = get_adjacents(p)
+#         if p == P(6, 2):
+#             print(adjacents)
+#         trees = get_no(adjacents, Acre.trees)
+#         lumberyards = get_no(adjacents, Acre.lumberyard)
+#         if p == P(6, 2):
+#             print(trees, lumberyards, (a.value for a in adjacents))
+#         if acre == Acre.open:
+#             if trees >= 3:
+#                 return Acre.trees
+#             return Acre.open
+#         elif acre == Acre.trees:
+#             if lumberyards >= 3:
+#                 return Acre.lumberyard
+#             return Acre.trees
+#         elif acre == Acre.lumberyard:
+#             if lumberyards >= 1 and trees >= 1:
+#                 return Acre.lumberyard
+#             return Acre.open
+#
+#     def get_no(list_, acre):
+#         return len([a for a in list_ if a == acre])
+#
+#     def print_out():
+#         MAX = 10
+#         for y in range(MAX):
+#             for x in range(MAX):
+#                 print(acres[P(x, y)].value, end='')
+#             print()
+#         print()
+#
+#     acres = parse()
+#     acres_new = {}
+#     for _ in range(10):
+#         print_out()
+#         for p, acre in acres.items():
+#             acres_new[p] = get_new_acre(p, acre)
+#         print_out()
+#         acres = acres_new
+#
+#     print_out()
 
-    def get_adjacents(p):
-        out = [move(p, d) for d in list(D)]
-        return [acres[p] for p in out if p in acres]
 
-    def parse():
-        out = {}
-        for y, line in enumerate(data):
-            for x, ch in enumerate(line):
-                out[P(x, y)] = Acre(ch)
-        return out
-
-    def get_new_acre(p, acre):
-        adjacents = get_adjacents(p)
-        if p == P(6, 2):
-            print(adjacents)
-        trees = get_no(adjacents, Acre.trees)
-        lumberyards = get_no(adjacents, Acre.lumberyard)
-        if p == P(6, 2):
-            print(trees, lumberyards, (a.value for a in adjacents))
-        if acre == Acre.open:
-            if trees >= 3:
-                return Acre.trees
-            return Acre.open
-        elif acre == Acre.trees:
-            if lumberyards >= 3:
-                return Acre.lumberyard
-            return Acre.trees
-        elif acre == Acre.lumberyard:
-            if lumberyards >= 1 and trees >= 1:
-                return Acre.lumberyard
-            return Acre.open
-
-    def get_no(list_, acre):
-        return len([a for a in list_ if a == acre])
-
-    def print_out():
-        MAX = 10
-        for y in range(MAX):
-            for x in range(MAX):
-                print(acres[P(x, y)].value, end='')
-            print()
-        print()
-
-    acres = parse()
-    acres_new = {}
-    for _ in range(10):
-        print_out()
-        for p, acre in acres.items():
-            acres_new[p] = get_new_acre(p, acre)
-        print_out()
-        acres = acres_new
-
-    print_out()
-
-
-def p_20_a(data):
-    dir_ = get_dict('NESW', D)
-    Barrier = Enum('Barrier', {'room': '.', 'wall': '#', 'door': '|'})
-
-    def top(str_):
-        # Too many, needs to populate in real time.
-        out = []
-        while True:
-            path, str_ = get_news(str_)
-            if out:
-                out = [a + path for a in out]
-            else:
-                out.append(path)
-            if not str_:
-                return out
-            paths, str_ = get_brackets(str_)
-            out = [a + path for a in out for path in paths]
-            if not str_:
-                return out
-
-    def get_news(str_):
-        match_ = re.match(r'[NESW]*', str_)
-        path = [dir_[ch] for ch in match_.group()]
-        str_ = str_[match_.end():]
-        return path, str_
-
-    def get_brackets(str_):
-        depth = 0
-        left = []
-        right = []
-        curr = left
-        for i, ch in enumerate(str_):
-            if ch == '(':
-                depth += 1
-                if depth == 1:
-                    continue
-            elif ch == ')':
-                depth -= 1
-            if depth == 0:
-                return (top(''.join(left)), top(''.join(right))), str_[i + 1:]
-            if depth == 1 and ch == '|':
-                curr = right
-                continue
-            curr.append(ch)
-
-    def get_map(paths):
-        out = {P(0, 0): Barrier.room}
-        for path in paths:
-            out.update(analize_path(path))
-        return out
-
-    def analize_path(path):
-        out = {}
-        p = P(0, 0)
-        for d in path:
-            p = move(p, d)
-            out[p] = Barrier.door
-            p = move(p, d)
-            out[p] = Barrier.room
-        return out
-
-    def get_furthest_path():
-        flood_counter = {p: inf for p, bar in map_.items() if
-                         bar == Barrier.room}
-        flood(P(0, 0), 1, flood_counter)
-        return max(flood_counter.values())
-
-    def flood(p, i, flood_counter):
-        rooms = get_next_rooms(p)
-        for room in rooms:
-            if flood_counter[room] > i:
-                flood_counter[room] = i
-                flood(room, i + 1, flood_counter)
-
-    def get_next_rooms(p):
-        out = []
-        for d in list(D):
-            next_p = move(p, d)
-            if next_p in map_ and map_[next_p] == Barrier.door:
-                out.append(move(next_p, d))
-        return out
-
-    def print_out():
-        for y in range(min(a.y for a in map_.keys()),
-                       max(a.y for a in map_.keys()) + 1):
-            for x in range(min(a.x for a in map_.keys()),
-                           max(a.x for a in map_.keys()) + 1):
-                if P(x, y) not in map_:
-                    print(' ', end='')
-                    continue
-                print(map_[P(x, y)].value, end='')
-            print()
-
-    data = data[0][1:-1]
-    paths = top(data)
-    map_ = get_map(paths)
-    furthest_path = get_furthest_path()
-    print(furthest_path)
+# def p_20_a(data):
+#     dir_ = get_dict('NESW', D)
+#     Barrier = Enum('Barrier', {'room': '.', 'wall': '#', 'door': '|'})
+#
+#     def top(str_):
+#         # Too many, needs to populate in real time.
+#         out = []
+#         while True:
+#             path, str_ = get_news(str_)
+#             if out:
+#                 out = [a + path for a in out]
+#             else:
+#                 out.append(path)
+#             if not str_:
+#                 return out
+#             paths, str_ = get_brackets(str_)
+#             out = [a + path for a in out for path in paths]
+#             if not str_:
+#                 return out
+#
+#     def get_news(str_):
+#         match_ = re.match(r'[NESW]*', str_)
+#         path = [dir_[ch] for ch in match_.group()]
+#         str_ = str_[match_.end():]
+#         return path, str_
+#
+#     def get_brackets(str_):
+#         depth = 0
+#         left = []
+#         right = []
+#         curr = left
+#         for i, ch in enumerate(str_):
+#             if ch == '(':
+#                 depth += 1
+#                 if depth == 1:
+#                     continue
+#             elif ch == ')':
+#                 depth -= 1
+#             if depth == 0:
+#                 return (top(''.join(left)), top(''.join(right))), str_[i + 1:]
+#             if depth == 1 and ch == '|':
+#                 curr = right
+#                 continue
+#             curr.append(ch)
+#
+#     def get_map(paths):
+#         out = {P(0, 0): Barrier.room}
+#         for path in paths:
+#             out.update(analize_path(path))
+#         return out
+#
+#     def analize_path(path):
+#         out = {}
+#         p = P(0, 0)
+#         for d in path:
+#             p = move(p, d)
+#             out[p] = Barrier.door
+#             p = move(p, d)
+#             out[p] = Barrier.room
+#         return out
+#
+#     def get_furthest_path():
+#         flood_counter = {p: inf for p, bar in map_.items() if
+#                          bar == Barrier.room}
+#         flood(P(0, 0), 1, flood_counter)
+#         return max(flood_counter.values())
+#
+#     def flood(p, i, flood_counter):
+#         rooms = get_next_rooms(p)
+#         for room in rooms:
+#             if flood_counter[room] > i:
+#                 flood_counter[room] = i
+#                 flood(room, i + 1, flood_counter)
+#
+#     def get_next_rooms(p):
+#         out = []
+#         for d in list(D):
+#             next_p = move(p, d)
+#             if next_p in map_ and map_[next_p] == Barrier.door:
+#                 out.append(move(next_p, d))
+#         return out
+#
+#     def print_out():
+#         for y in range(min(a.y for a in map_.keys()),
+#                        max(a.y for a in map_.keys()) + 1):
+#             for x in range(min(a.x for a in map_.keys()),
+#                            max(a.x for a in map_.keys()) + 1):
+#                 if P(x, y) not in map_:
+#                     print(' ', end='')
+#                     continue
+#                 print(map_[P(x, y)].value, end='')
+#             print()
+#
+#     data = data[0][1:-1]
+#     paths = top(data)
+#     map_ = get_map(paths)
+#     return get_furthest_path()
 
 
 def p_23_a(data):
@@ -1353,19 +1470,6 @@ def p_23_b(data):
         out = (Solution(PP(*[sum(a) for a in zip(sol.p, p)])) for p in ppp)
         return [a for a in out if a.score >= min_]
 
-    def save_image(center, size):
-        x_range = range(center.x - size, center.x + size)
-        z_range = range(center.z - size, center.z + size)
-        out = [Solution(PP(x, center.y, z)).score for z in z_range for x in
-               x_range]
-        min_, max_ = min(out), max(out)
-        out = [int((a - min_) / (max_ + 1 - min_) * 255) for a in out]
-        img = Image.new("L", (
-            x_range.stop - x_range.start, z_range.stop - z_range.start),
-                        "white")
-        img.putdata(out)
-        img.save('p_21.png')
-
     population, cooling_factor = 20, 0.8
     bots = [get_bot(line) for line in data]
     p_min, p_max = get_extremes(bots)
@@ -1374,15 +1478,32 @@ def p_23_b(data):
     solutions = sorted([Solution() for _ in range(population)], key=get_score)
     while energy > 1:
         avg_score = sum(a.score for a in solutions) / len(solutions)
-        print(f'Energy: {energy:>11,.0f}', solutions[-1],
-              f'AvgScore: {avg_score:.1f}', sep=', ')
+        # print(f'Energy: {energy:>11,.0f}', solutions[-1],
+        #       f'AvgScore: {avg_score:.1f}', sep=', ')
         solutions = mutate(solutions)
         energy *= cooling_factor
         distance = int(energy)
     winner = solutions[-1]
-    save_image(winner.p, 20)
     return winner.distance
 
 
-FUN = p_23_b
-print(run(FUN, FILENAME_TEMPLATE))
+def run_all():
+    functions = (v for k, v in globals().items()
+                 if callable(v) and k.startswith('p_'))
+    for fun in functions:
+        run_single(fun)
+
+
+def run_single(fun):
+    print(f'{fun.__name__}:')
+    start_time = time()
+    print(f'Result:   {run(fun, FILENAME_TEMPLATE)}')
+    duration = time() - start_time
+    print(f'Duration: {duration:.3f}s\n')
+
+
+run_all()
+# run_single(p_6_b)
+
+# FUN = p_23_a
+# print(run(FUN, FILENAME_TEMPLATE))

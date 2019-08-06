@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 from collections import Counter, namedtuple, defaultdict
 from copy import copy, deepcopy
 from enum import Enum
@@ -832,5 +834,13 @@ def p_25_a():
                 return value
 
 
-FUN = p_23_a
-print(run(FUN, FILENAME_TEMPLATE))
+def run_all():
+    functions = [v for k, v in globals().items()
+                 if callable(v) and k.startswith('p_')]
+    for fun in functions:
+        print(run(fun, FILENAME_TEMPLATE))
+
+
+run_all()
+# FUN = p_23_a
+# print(run(FUN, FILENAME_TEMPLATE))
