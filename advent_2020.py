@@ -1,10 +1,26 @@
+#!/usr/bin/env python3
+#
+# Usage: ./advent_2020.py
+# Descriptions of problems can be found here: https://adventofcode.com/2020
+# Script runs a test for every function with test data that is stored in 'IN_<problem_num>'
+# variable. The expected result is stored in function's docstring.
 
 
 ###
 ##  DAY 1
 #
 
+IN_1 = \
+'''1721
+979
+366
+299
+675
+1456'''
+
+
 def problem_1_a(lines):
+    '''514579'''
     import itertools
     numbers = [int(line) for line in lines]
     for l, r in itertools.combinations(numbers, 2):
@@ -13,77 +29,27 @@ def problem_1_a(lines):
 
 
 def problem_1_b(lines):
+    '''241861950'''
     import itertools
     numbers = [int(line) for line in lines]
     for a, b, c in itertools.combinations(numbers, 3):
         if a + b + c == 2020:
             return a * b * c
 
+
 ###
 ##  DAY 2
 #
 
-def problem_2_a(lines):
-    out = 0
-    for line in lines:
-        min_, max_, letter, password = re.match('^(\d+)-(\d+) (\w): (\w+)$', line).groups()
-        out += int(min_) <= password.count(letter) <= int(max_)
-    return out
+IN_2 = \
+'''1-3 a: abcde
+1-3 b: cdefg
+2-9 c: ccccccccc'''
 
 
 def problem_2_a(lines):
-    def process_():
-        for line in lines:
-            min_, max_, letter, password = re.match('^(\d+)-(\d+) (\w): (\w+)$', line).groups()
-            yield int(min_) <= password.count(letter) <= int(max_)
-    return sum(process_())
-
-
-def problem_2_a(lines):
-    def parser():
-        for line in lines:
-            yield re.match('^(\d+)-(\d+) (\w): (\w+)$', line).groups()
-    return sum(int(min_) <= password.count(letter) <= int(max_) for min_, max_, letter, password in parser())
-
-
-def problem_2_a(lines):
-    def parser():
-        for line in lines:
-            yield re.match('^(\d+)-(\d+) (\w): (\w+)$', line).groups()
-    def is_valid(min_, max_, letter, password):
-        return int(min_) <= password.count(letter) <= int(max_)
-    return sum(is_valid(*tokens) for tokens in parser())
-
-
-def problem_2_a(lines):
-    def parse_line(line):
-        return re.match('^(\d+)-(\d+) (\w): (\w+)$', line).groups()
-    def is_valid(min_, max_, letter, password):
-        return int(min_) <= password.count(letter) <= int(max_)
-    return sum(is_valid(*parse_line(line)) for line in lines)
-
-
-def problem_2_a(lines):
-    def parse_line(line): return re.match('^(\d+)-(\d+) (\w): (\w+)$', line).groups()
-    def is_valid(min_, max_, letter, password): return int(min_) <= password.count(letter) <= int(max_)
-    return sum(is_valid(*parse_line(line)) for line in lines)
-
-
-def problem_2_a(lines):
-    parse_line = lambda line: re.match('^(\d+)-(\d+) (\w): (\w+)$', line).groups()
-    is_valid   = lambda min_, max_, letter, password: int(min_) <= password.count(letter) <= int(max_)
-    return sum(is_valid(*parse_line(line)) for line in lines)
-
-
-def problem_2_b(lines):
-    out = 0
-    for line in lines:
-        i_1, i_2, letter, password = re.match('^(\d+)-(\d+) (\w): (\w+)$', line).groups()
-        out += (password[int(i_1)-1] == letter) + (password[int(i_2)-1] == letter) == 1
-    return out
-
-
-def problem_2_a(lines):
+    '''2'''
+    import re
     def is_valid(line):
         min_, max_, letter, password = re.match('^(\d+)-(\d+) (\w): (\w+)$', line).groups()
         return int(min_) <= password.count(letter) <= int(max_)
@@ -91,39 +57,34 @@ def problem_2_a(lines):
 
 
 def problem_2_b(lines):
+    '''1'''
+    import re
     def is_valid(line):
         i_1, i_2, letter, password = re.match('^(\d+)-(\d+) (\w): (\w+)$', line).groups()
         return (password[int(i_1)-1] == letter) + (password[int(i_2)-1] == letter) == 1
     return sum(is_valid(line) for line in lines)
-
-
-def problem_2_a(lines):
-    is_valid = lambda min_, max_, letter, password: int(min_) <= password.count(letter) <= int(max_)
-    return sum(is_valid(*re.match('^(\d+)-(\d+) (\w): (\w+)$', line).groups()) for line in lines)
-
-
-def problem_2_a(lines):
-    def is_valid(min_, max_, letter, password): return int(min_) <= password.count(letter) <= int(max_)
-    return sum(is_valid(*re.match('^(\d+)-(\d+) (\w): (\w+)$', line).groups()) for line in lines)
-
-
-def problem_2_a(lines):
-    def is_valid(min_, max_, letter, password):
-        return int(min_) <= password.count(letter) <= int(max_)
-    return sum(is_valid(*re.match('^(\d+)-(\d+) (\w): (\w+)$', line).groups()) for line in lines)
-
-
-def problem_2_b(lines):
-    def is_valid(i_1, i_2, letter, password):
-        return (password[int(i_1)-1] == letter) + (password[int(i_2)-1] == letter) == 1
-    return sum(is_valid(*re.match('^(\d+)-(\d+) (\w): (\w+)$', line).groups()) for line in lines)
 
 
 ###
 ##  DAY 3
 #
 
+IN_3 = \
+'''..##.......
+#...#...#..
+.#....#..#.
+..#.#...#.#
+.#...##..#.
+..#.##.....
+.#.#.#....#
+.#........#
+#.##...#...
+#...##....#
+.#..#...#.#'''
+
+
 def problem_3_a(lines):
+    '''7'''
     import collections
     P = collections.namedtuple('P', 'x y')
     positions = (P(x=y*3, y=y) for y in range(len(lines)))
@@ -132,6 +93,7 @@ def problem_3_a(lines):
 
 
 def problem_3_b(lines):
+    '''336'''
     import collections, functools, itertools, operator
     P = collections.namedtuple('P', 'x y')
     def get_positions(slope):
@@ -143,22 +105,13 @@ def problem_3_b(lines):
     return functools.reduce(operator.mul, (count_trees(slope) for slope in slopes))
 
 
+###
+##  TESTS
+#
 
+for function in [a for a in vars().values() if callable(a)]:
+    input_name = 'IN_' + function.__name__.split('_')[1]
+    lines = vars()[input_name].splitlines()
+    assert str(function(lines)) == function.__doc__
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+print('All tests passed.')
