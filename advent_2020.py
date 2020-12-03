@@ -3,7 +3,7 @@
 # Usage: ./advent_2020.py
 # Descriptions of problems can be found here: https://adventofcode.com/2020
 # Script runs a test for every function with test data that is stored in 'IN_<problem_num>'
-# variable. The expected result is stored in function's docstring.
+# variable. The expected result should be stored in function's docstring.
 
 
 ###
