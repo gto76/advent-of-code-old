@@ -5,78 +5,19 @@
 #
 
 def problem_1_a(lines):
-    from itertools import combinations
-    entries = [int(line) for line in lines]
-    for l, r in combinations(entries, 2):
+    import itertools
+    numbers = [int(line) for line in lines]
+    for l, r in itertools.combinations(numbers, 2):
         if l + r == 2020:
             return l * r
 
 
 def problem_1_b(lines):
-    from itertools import combinations
-    entries = [int(line) for line in lines]
-    for a, b, c in combinations(entries, 3):
+    import itertools
+    numbers = [int(line) for line in lines]
+    for a, b, c in itertools.combinations(numbers, 3):
         if a + b + c == 2020:
             return a * b * c
-
-
-def problem_1_a(lines):
-    from itertools import combinations
-    for l, r in combinations(map(int, lines), 2):
-        if l + r == 2020:
-            return l * r
-
-
-def problem_1_b(lines):
-    from itertools import combinations
-    for a, b, c in combinations(map(int, lines), 3):
-        if a + b + c == 2020:
-            return a * b * c
-
-
-def problem_1_a(lines):
-    from itertools import combinations
-    entries = (int(line) for line in lines)
-    for l, r in combinations(entries, 2):
-        if l + r == 2020:
-            return l * r
-
-
-def problem_1_b(lines):
-    from itertools import combinations
-    entries = (int(line) for line in lines)
-    for a, b, c in combinations(entries, 3):
-        if a + b + c == 2020:
-            return a * b * c
-
-
-def problem_1_a(lines):
-    from itertools import combinations
-    entries = map(int, lines)
-    for l, r in combinations(entries, 2):
-        if l + r == 2020:
-            return l * r
-
-
-def problem_1_b(lines):
-    from itertools import combinations
-    entries = map(int, lines)
-    for a, b, c in combinations(entries, 3):
-        if a + b + c == 2020:
-            return a * b * c
-
-
-def problem_1_a(lines):
-    from itertools import combinations
-    entries = map(int, lines)
-    return [l*r for l, r in combinations(entries, 2) if l+r == 2020][0]
-
-
-def problem_1_b(lines):
-    from itertools import combinations
-    entries = map(int, lines)
-    return [a*b*c for a, b, c in combinations(entries, 3) if a+b+c == 2020][0]
-
 
 ###
 ##  DAY 2
