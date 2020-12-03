@@ -118,6 +118,12 @@ def init_matrix(x, y, default):
     return out
 
 
+def get_next_member(member):
+    members = list(member.__class__)
+    index = (members.index(member) + 1) % len(members)
+    return members[index]
+
+
 class Bar:
     @staticmethod
     def range(*args):
