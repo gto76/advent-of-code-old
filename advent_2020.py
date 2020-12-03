@@ -6,6 +6,14 @@
 # variable. The expected result should be stored in function's docstring.
 
 
+def main():
+    for function in [a for a in globals().values() if callable(a) and a.__name__ != 'main']:
+        input_name = 'IN_' + function.__name__.split('_')[1]
+        lines = globals()[input_name].splitlines()
+        assert str(function(lines)) == function.__doc__
+    print('All tests passed.')
+
+
 ###
 ##  DAY 1
 #
@@ -105,13 +113,5 @@ def problem_3_b(lines):
     return functools.reduce(operator.mul, (count_trees(slope) for slope in slopes))
 
 
-###
-##  TESTS
-#
-
-for function in [a for a in vars().values() if callable(a)]:
-    input_name = 'IN_' + function.__name__.split('_')[1]
-    lines = vars()[input_name].splitlines()
-    assert str(function(lines)) == function.__doc__
-
-print('All tests passed.')
+if __name__ == '__main__':
+    main()
