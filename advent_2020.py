@@ -10,8 +10,13 @@ def main():
     for function in [a for a in globals().values() if callable(a) and a.__name__ != 'main']:
         input_name = 'IN_' + function.__name__.split('_')[1]
         lines = globals()[input_name].splitlines()
-        assert str(function(lines)) == function.__doc__
-    print('All tests passed.')
+        result = function(lines)
+        if str(result) != function.__doc__:
+            print(f'Function {function.__name__} returned {result} isntead of',
+                  f'{function.__doc__}.')
+            break
+    else:
+        print('All tests passed.')
 
 
 ###
@@ -112,6 +117,61 @@ def problem_3_b(lines):
     slopes = [P(x=1, y=1), P(x=3, y=1), P(x=5, y=1), P(x=7, y=1), P(x=1, y=2)]
     return functools.reduce(operator.mul, (count_trees(slope) for slope in slopes))
 
+
+###
+##  DAY 4
+#
+
+IN_4 = \
+'''ecl:gry pid:860033327 eyr:2020 hcl:#fffffd
+byr:1937 iyr:2017 cid:147 hgt:183cm
+
+iyr:2013 ecl:amb cid:350 eyr:2023 pid:028048884
+hcl:#cfa07d byr:1929
+
+hcl:#ae17e1 iyr:2013
+eyr:2024
+ecl:brn pid:760753108 byr:1931
+hgt:179cm
+
+hcl:#cfa07d eyr:2025 pid:166559648
+iyr:2011 ecl:brn hgt:59in'''
+
+
+def problem_4_a(lines):
+    '''2'''
+    passports = ' '.join(lines).split('  ')
+    get_keys = lambda passport: {item.split(':')[0] for item in passport.split()}
+    is_valid = lambda passport: len(get_keys(passport) - {'cid'}) == 7
+    return sum(is_valid(p) for p in passports)
+
+
+def problem_4_b(lines):
+    '''2'''
+    import re
+    RULES = dict(
+        byr=lambda v: 1920 <= int(v) <= 2002,
+        iyr=lambda v: 2010 <= int(v) <=  2020,
+        eyr=lambda v: 2020 <= int(v) <=  2030,
+        hgt=lambda v: 150 <= int(v[:-2]) <= 193 if 'cm' in v else 59 <= int(v[:-2]) <= 76,
+        hcl=lambda v: re.match('#[0-9a-f]{6}$', v) != None,
+        ecl=lambda v: v in 'amb blu brn gry grn hzl oth'.split(),
+        pid=lambda v: re.match('\d{9}$', v) != None
+    )
+    def is_field_valid(key, value):
+        try:
+            return RULES[key](value)
+        except Exception:
+            return False
+    def is_passport_valid(passport):
+        return sum(is_field_valid(*item.split(':')) for item in passport.split()) == 7
+    passports = ' '.join(lines).split('  ')
+    return sum(is_passport_valid(p) for p in passports)
+
+
+###
+##  MAIN
+#  
 
 if __name__ == '__main__':
     main()
