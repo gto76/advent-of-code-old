@@ -11,9 +11,10 @@ def main():
         input_name = 'IN_' + function.__name__.split('_')[1]
         lines = globals()[input_name].splitlines()
         result = function(lines)
-        if str(result) != function.__doc__:
-            print(f'Function {function.__name__} returned {result} isntead of',
-                  f'{function.__doc__}.')
+        expected_result = function.__doc__.split('?')[1].strip()
+        if str(result) != expected_result:
+            print(f'Function "{function.__name__}" returned {result} instead of',
+                  f'{expected_result}.')
             break
     else:
         print('All tests passed.')
@@ -33,7 +34,8 @@ IN_1 = \
 
 
 def problem_1_a(lines):
-    '''514579'''
+    '''Find the two entries that sum to 2020; what do you get if you multiply them together?
+    514579'''
     import itertools
     numbers = [int(line) for line in lines]
     for l, r in itertools.combinations(numbers, 2):
@@ -42,7 +44,8 @@ def problem_1_a(lines):
 
 
 def problem_1_b(lines):
-    '''241861950'''
+    '''In your expense report, what is the product of the three entries that sum to 2020?
+    241861950'''
     import itertools
     numbers = [int(line) for line in lines]
     for a, b, c in itertools.combinations(numbers, 3):
@@ -61,7 +64,7 @@ IN_2 = \
 
 
 def problem_2_a(lines):
-    '''2'''
+    '''How many passwords are valid according to their policies? 2'''
     import re
     def is_valid(line):
         min_, max_, letter, password = re.match('^(\d+)-(\d+) (\w): (\w+)$', line).groups()
@@ -70,7 +73,7 @@ def problem_2_a(lines):
 
 
 def problem_2_b(lines):
-    '''1'''
+    '''How many passwords are valid according to the new interpretation of the policies? 1'''
     import re
     def is_valid(line):
         i_1, i_2, letter, password = re.match('^(\d+)-(\d+) (\w): (\w+)$', line).groups()
@@ -97,7 +100,8 @@ IN_3 = \
 
 
 def problem_3_a(lines):
-    '''7'''
+    '''Starting at the top-left corner of your map and following a slope of right 3 and down 1,
+    how many trees would you encounter? 7'''
     import collections
     P = collections.namedtuple('P', 'x y')
     positions = (P(x=y*3, y=y) for y in range(len(lines)))
@@ -106,7 +110,8 @@ def problem_3_a(lines):
 
 
 def problem_3_b(lines):
-    '''336'''
+    '''What do you get if you multiply together the number of trees encountered on each of the
+    listed slopes? 336'''
     import collections, functools, itertools, operator
     P = collections.namedtuple('P', 'x y')
     def get_positions(slope):
@@ -139,7 +144,7 @@ iyr:2011 ecl:brn hgt:59in'''
 
 
 def problem_4_a(lines):
-    '''2'''
+    '''In your batch file, how many passports are valid? 2'''
     passports = ' '.join(lines).split('  ')
     get_keys = lambda passport: {item.split(':')[0] for item in passport.split()}
     is_valid = lambda passport: len(get_keys(passport) - {'cid'}) == 7
@@ -147,7 +152,7 @@ def problem_4_a(lines):
 
 
 def problem_4_b(lines):
-    '''2'''
+    '''In your batch file, how many passports are valid? 2'''
     import re
     RULES = dict(
         byr=lambda v: 1920 <= int(v) <= 2002,
@@ -167,6 +172,52 @@ def problem_4_b(lines):
         return sum(is_field_valid(*item.split(':')) for item in passport.split()) == 7
     passports = ' '.join(lines).split('  ')
     return sum(is_passport_valid(p) for p in passports)
+
+
+###
+##  DAY 5
+#
+
+IN_5 = \
+'''BBFFBBFLLR
+BBFFBBFLRL
+BBFFBBFRLL'''
+
+
+def problem_5_a(lines):
+    '''What is the highest seat ID on a boarding pass? 820'''
+    get_row    = lambda code: int(code[:-3].replace('F', '0').replace('B', '1'), 2)
+    get_column = lambda code: int(code[-3:].replace('L', '0').replace('R', '1'), 2)
+    get_id     = lambda code: get_row(code) * 8 + get_column(code)
+    return max(get_id(code) for code in lines)
+
+
+def problem_5_b(lines):
+    '''What is the ID of your seat? 819'''
+    get_row    = lambda code: int(code[:-3].replace('F', '0').replace('B', '1'), 2)
+    get_column = lambda code: int(code[-3:].replace('L', '0').replace('R', '1'), 2)
+    get_id     = lambda code: get_row(code) * 8 + get_column(code)
+    taken_ids  = {get_id(code) for code in lines}
+    all_ids    = range(min(taken_ids), max(taken_ids)+1)
+    return (set(all_ids) - taken_ids).pop()
+
+
+# ###
+# ##  DAY X
+# #
+#
+# IN_X = \
+# ''''''
+#
+#
+# def problem_X_a(lines):
+#     ''''''
+#     pass
+#
+#
+# def problem_X_b(lines):
+#     ''''''
+#     pass
 
 
 ###
