@@ -186,19 +186,17 @@ BBFFBBFRLL'''
 
 def problem_5_a(lines):
     '''What is the highest seat ID on a boarding pass? 820'''
-    get_row    = lambda code: int(code[:-3].replace('F', '0').replace('B', '1'), 2)
-    get_column = lambda code: int(code[-3:].replace('L', '0').replace('R', '1'), 2)
-    get_id     = lambda code: get_row(code) * 8 + get_column(code)
+    get_bin = lambda code: ''.join('0' if ch in 'FL' else '1' for ch in code)
+    get_id  = lambda code: int(get_bin(code), 2)
     return max(get_id(code) for code in lines)
 
 
 def problem_5_b(lines):
     '''What is the ID of your seat? 819'''
-    get_row    = lambda code: int(code[:-3].replace('F', '0').replace('B', '1'), 2)
-    get_column = lambda code: int(code[-3:].replace('L', '0').replace('R', '1'), 2)
-    get_id     = lambda code: get_row(code) * 8 + get_column(code)
-    taken_ids  = {get_id(code) for code in lines}
-    all_ids    = range(min(taken_ids), max(taken_ids)+1)
+    get_bin   = lambda code: ''.join('0' if ch in 'FL' else '1' for ch in code)
+    get_id    = lambda code: int(get_bin(code), 2)
+    taken_ids = {get_id(code) for code in lines}
+    all_ids   = range(min(taken_ids), max(taken_ids)+1)
     return (set(all_ids) - taken_ids).pop()
 
 
